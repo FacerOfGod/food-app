@@ -11,15 +11,21 @@ export async function createSessionAction(_prevState: unknown, formData: FormDat
   const name = (formData.get("name") as string)?.trim();
   if (!name) return { error: "Veuillez donner un nom à la session." };
 
-  const session = await prisma.session.create({
-    data: {
-      name,
-      hostId: user.id,
-      members: {
-        create: { userId: user.id },
+  let session;
+  try {
+    session = await prisma.session.create({
+      data: {
+        name,
+        hostId: user.id,
+        members: {
+          create: { userId: user.id },
+        },
       },
-    },
-  });
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { error: `Erreur DB: ${msg}` };
+  }
 
   redirect(`/host/${session.id}/dishes`);
 }
