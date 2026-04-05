@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "start": "next start",
-    "postinstall": "prisma generate"
+    "start": "next start"
   },
   "dependencies": {
     "@libsql/client": "^0.17.2",
