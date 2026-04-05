@@ -11,11 +11,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack(config) {
-    // Add alias '@' pointing to the 'app' folder
-    config.resolve.alias["@"] = path.resolve(__dirname, "app");
-    return config;
-  },
 };
 
 export default nextConfig;
