@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   images: {
@@ -9,6 +10,11 @@ const nextConfig: NextConfig = {
         pathname: "/photo-**",
       },
     ],
+  },
+  // Force Webpack and handle symlinks for restrictive hosting environments
+  webpack: (config) => {
+    config.resolve.symlinks = false;
+    return config;
   },
 };
 
