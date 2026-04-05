@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+    webpack(config) {
+    // Fix: Point '@' to project root, not 'app' folder
+    config.resolve.alias["@"] = path.resolve(__dirname);
+    return config;
+  },
 };
 
 export default nextConfig;
