@@ -11,9 +11,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Force Webpack and handle symlinks for restrictive hosting environments
-  webpack: (config) => {
-    config.resolve.symlinks = false;
+  webpack(config) {
+    // Add alias '@' pointing to the 'app' folder
+    config.resolve.alias["@"] = path.resolve(__dirname, "app");
     return config;
   },
 };
