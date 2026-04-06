@@ -11,7 +11,14 @@ interface Props {
 
 export default async function DishesPage({ params }: Props) {
   const { sessionId } = await params;
-  const data = await getSessionDishes(sessionId);
+
+  let data;
+  try {
+    data = await getSessionDishes(sessionId);
+  } catch (e) {
+    const msg = e instanceof Error ? `${e.message}\n${e.stack}` : String(e);
+    return <pre style={{ padding: 24, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{msg}</pre>;
+  }
 
   if (!data) redirect("/dashboard");
 
