@@ -86,7 +86,7 @@ export default async function DashboardPage() {
                   className="relative flex items-center justify-between bg-white rounded-xl border border-gray-200 p-4 hover:border-orange-300 transition-colors"
                 >
                   <Link
-                    href={`/vote/${session.id}`}
+                    href={`/host/${session.id}?view=vote`}
                     className="absolute inset-0 rounded-xl"
                   />
                   <div className="pointer-events-none">

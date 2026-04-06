@@ -52,7 +52,19 @@ export default async function DishesPage({ params }: Props) {
         <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
           <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
             <Link
-              href={`/host/${session.id}`}
+              href={`/host/${session.id}?view=vote`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+            >
+              Voter
+            </Link>
+            <Link
+              href={`/host/${session.id}?view=mes-choix`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+            >
+              Mes choix
+            </Link>
+            <Link
+              href={`/host/${session.id}?view=people`}
               className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
             >
               Par personne
@@ -68,12 +80,6 @@ export default async function DishesPage({ params }: Props) {
               className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-white text-gray-900 shadow-sm"
             >
               Gestion des plats
-            </Link>
-            <Link
-              href={`/vote/${session.id}`}
-              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
-            >
-              Voter
             </Link>
           </div>
         </div>

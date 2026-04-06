@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getPeopleResults, getDishResults } from "@/actions/votes";
+import { getPeopleResults, getDishResults, getVotingData } from "@/actions/votes";
 import { PeopleView } from "@/components/host/PeopleView";
 import { DishesView } from "@/components/host/DishesView";
+import { VotingInterface } from "@/components/vote/VotingInterface";
 import { logoutAction } from "@/actions/auth";
 
 interface Props {
@@ -13,14 +14,18 @@ interface Props {
 export default async function HostDashboardPage({ params, searchParams }: Props) {
   const { sessionId } = await params;
   const { view } = await searchParams;
-  const activeView = view === "dishes" ? "dishes" : "people";
+  const activeView = view === "dishes" ? "dishes"
+                   : view === "people" ? "people"
+                   : view === "mes-choix" ? "mes-choix"
+                   : "vote"; // default to vote
 
-  const [peopleData, dishData] = await Promise.all([
+  const [peopleData, dishData, votingData] = await Promise.all([
     getPeopleResults(sessionId),
     getDishResults(sessionId),
+    getVotingData(sessionId),
   ]);
 
-  if (!peopleData || !dishData) redirect("/dashboard");
+  if (!peopleData || !dishData || !votingData) redirect("/dashboard");
 
   const { session, currentUser } = peopleData;
   const isHost = session.hostId === currentUser.id;
@@ -47,7 +52,27 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
         <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
           <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
             <Link
-              href={`/host/${sessionId}`}
+              href={`/host/${sessionId}?view=vote`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeView === "vote"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Voter
+            </Link>
+            <Link
+              href={`/host/${sessionId}?view=mes-choix`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeView === "mes-choix"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Mes choix
+            </Link>
+            <Link
+              href={`/host/${sessionId}?view=people`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 activeView === "people"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -74,21 +99,42 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
                 Gestion des plats
               </Link>
             )}
-            <Link
-              href={`/vote/${sessionId}`}
-              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
-            >
-              Voter
-            </Link>
           </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        {activeView === "people" ? (
-          <PeopleView members={peopleData.members} dishes={peopleData.dishes} />
+      <div className="max-w-3xl mx-auto py-6">
+        {activeView === "vote" || activeView === "mes-choix" ? (
+          votingData.totalDishes === 0 ? (
+            <div className="text-center px-4">
+              <div className="text-5xl mb-4">🍽️</div>
+              <h1 className="text-xl font-bold text-gray-900 mb-2">
+                Aucun plat pour l&apos;instant
+              </h1>
+              <p className="text-gray-500 text-sm">
+                L&apos;hôte n&apos;a pas encore ajouté de plats. Revenez plus tard !
+              </p>
+            </div>
+          ) : (
+            <VotingInterface
+              sessionId={sessionId}
+              nextDish={votingData.nextDish}
+              dishes={votingData.dishes}
+              userVotes={votingData.userVotes}
+              votedCount={votingData.votedCount}
+              totalDishes={votingData.totalDishes}
+              userName={votingData.user.name ?? ""}
+              viewMode={activeView}
+            />
+          )
+        ) : activeView === "people" ? (
+          <div className="px-4">
+            <PeopleView members={peopleData.members} dishes={peopleData.dishes} />
+          </div>
         ) : (
-          <DishesView dishStats={dishData.dishStats} />
+          <div className="px-4">
+            <DishesView dishStats={dishData.dishStats} />
+          </div>
         )}
       </div>
     </main>

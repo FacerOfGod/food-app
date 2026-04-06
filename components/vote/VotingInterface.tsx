@@ -36,6 +36,7 @@ interface Props {
   votedCount: number;
   totalDishes: number;
   userName: string;
+  viewMode: "vote" | "mes-choix";
 }
 
 export function VotingInterface({
@@ -46,11 +47,12 @@ export function VotingInterface({
   votedCount,
   totalDishes,
   userName,
+  viewMode,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<number | null>(null);
-  const [reviewMode, setReviewMode] = useState(nextDish === null);
+  
   // For review mode: which dish is being edited
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
 
@@ -73,67 +75,29 @@ export function VotingInterface({
     startTransition(() => {
       router.refresh();
       setSelected(null);
-      if (reviewMode) setEditingDish(null);
+      if (viewMode === "mes-choix") setEditingDish(null);
     });
   }
 
   const existingDishNames = dishes.map((d) => d.name);
 
-  const header = (
-    <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-3 overflow-x-auto scrollbar-hide">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Link href={`/host/${sessionId}`} className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0" title="Retour à la session">
-            ←
-          </Link>
-          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">{userName}</span>
-        </div>
-        
-        <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0">
-          <button
-            onClick={() => { if (nextDish) setReviewMode(false); }}
-            disabled={!nextDish}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              !reviewMode ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-            } ${!nextDish ? "opacity-40 cursor-not-allowed" : ""}`}
-          >
-            Vote
-          </button>
-          <button
-            onClick={() => setReviewMode(true)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              reviewMode ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Mes choix
-          </button>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <span className="text-xs text-gray-400 whitespace-nowrap hidden sm:inline">
+  return (
+    <div className="flex flex-col flex-1">
+      <div className="flex items-center justify-between px-4 py-2 bg-white">
+        <span className="text-xs text-gray-500 font-medium">
           {votedCount} / {totalDishes} notés
         </span>
-        <div className="flex-shrink-0">
-          <GuestDishAdder sessionId={sessionId} existingDishNames={existingDishNames} />
-        </div>
+        <GuestDishAdder sessionId={sessionId} existingDishNames={existingDishNames} />
       </div>
-    </header>
-  );
 
-  // ── Review mode ──────────────────────────────────────────────
-  if (reviewMode) {
-    return (
-      <main className="min-h-screen bg-[#fafaf9] flex flex-col">
-        {header}
+      <div className="h-1.5 bg-gray-100">
+        <div
+          className="h-full bg-orange-400 transition-all duration-700 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
-        <div className="h-1.5 bg-gray-100">
-          <div
-            className="h-full bg-orange-400 transition-all duration-700"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
+      {viewMode === "mes-choix" ? (
         <div className="max-w-lg mx-auto w-full px-4 py-6">
           {nextDish === null && (
             <div className="text-center mb-6">
@@ -224,22 +188,7 @@ export function VotingInterface({
             })}
           </div>
         </div>
-      </main>
-    );
-  }
-
-  // ── Voting mode ──────────────────────────────────────────────
-  return (
-    <main className="min-h-screen bg-[#fafaf9] flex flex-col">
-        {header}
-
-      <div className="h-1.5 bg-gray-100">
-        <div
-          className="h-full bg-orange-400 transition-all duration-700 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
+      ) : (
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         <div className="w-full max-w-sm">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
@@ -296,6 +245,7 @@ export function VotingInterface({
           </div>
         </div>
       </div>
-    </main>
+      )}
+    </div>
   );
 }
