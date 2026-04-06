@@ -23,6 +23,7 @@ interface Props {
 
 export function DishesView({ dishStats }: Props) {
   const [selectedDish, setSelectedDish] = useState<DishStat | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   if (dishStats.length === 0) {
     return (
@@ -32,10 +33,27 @@ export function DishesView({ dishStats }: Props) {
     );
   }
 
+  const filteredDishes = dishStats.filter(d =>
+    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.category && d.category.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
     <>
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Rechercher un plat…"
+          className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+        />
+      </div>
+
       <div className="space-y-3">
-        {dishStats.map((dish) => {
+        {filteredDishes.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-4">Aucun résultat.</p>
+        ) : filteredDishes.map((dish) => {
           const likeCount = dish.likers.length;
           const dislikeCount = dish.dislikers.length;
           const total = dish.totalVotes;

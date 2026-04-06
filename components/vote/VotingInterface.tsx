@@ -51,6 +51,7 @@ export function VotingInterface({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // For review mode: which dish is being edited
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
@@ -101,8 +102,21 @@ export function VotingInterface({
             </div>
           )}
 
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher un plat…"
+              className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+
           <div className="space-y-2">
-            {dishes.map((dish) => {
+            {dishes.filter(d => 
+              d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (d.category && d.category.toLowerCase().includes(searchQuery.toLowerCase()))
+            ).map((dish) => {
               const rating = voteMap.get(dish.id) ?? null;
               const ratingMeta = rating ? RATINGS.find((r) => r.value === rating) : null;
               const isEditing = editingDish?.id === dish.id;
