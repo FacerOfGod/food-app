@@ -22,7 +22,8 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
   if (!peopleData || !dishData) redirect("/dashboard");
 
-  const { session } = peopleData;
+  const { session, currentUser } = peopleData;
+  const isHost = session.hostId === currentUser.id;
 
   return (
     <main className="min-h-screen bg-[#fafaf9]">
@@ -42,40 +43,44 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
       </header>
 
       {/* Tab switcher */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-3xl mx-auto px-4 flex gap-1 pt-2 overflow-x-auto scrollbar-hide">
-          <Link
-            href={`/host/${sessionId}`}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
-              activeView === "people"
-                ? "bg-orange-50 text-orange-600 border-b-2 border-orange-500"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            👤 Par personne
-          </Link>
-          <Link
-            href={`/host/${sessionId}?view=dishes`}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
-              activeView === "dishes"
-                ? "bg-orange-50 text-orange-600 border-b-2 border-orange-500"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            🍽️ Par plat
-          </Link>
-          <Link
-            href={`/host/${sessionId}/dishes`}
-            className="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors text-gray-500 hover:text-gray-700 whitespace-nowrap"
-          >
-            ⚙️ Gestion des plats
-          </Link>
-          <Link
-            href={`/vote/${sessionId}`}
-            className="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors text-orange-600 hover:bg-orange-50 whitespace-nowrap flex items-center gap-1"
-          >
-            👉 Rejoindre
-          </Link>
+      <div className="bg-white border-b border-gray-200 py-3">
+        <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
+          <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
+            <Link
+              href={`/host/${sessionId}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeView === "people"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Par personne
+            </Link>
+            <Link
+              href={`/host/${sessionId}?view=dishes`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeView === "dishes"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Par plat
+            </Link>
+            {isHost && (
+              <Link
+                href={`/host/${sessionId}/dishes`}
+                className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+              >
+                Gestion des plats
+              </Link>
+            )}
+            <Link
+              href={`/vote/${sessionId}`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+            >
+              Voter
+            </Link>
+          </div>
         </div>
       </div>
 

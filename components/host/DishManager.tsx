@@ -26,6 +26,7 @@ export function DishManager({ sessionId, dishes }: Props) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Tous");
   const [isPending, startTransition] = useTransition();
+  const [showSelected, setShowSelected] = useState(false);
 
   const sessionDishNames = new Set(dishes.map((d) => d.name.toLowerCase()));
 
@@ -104,36 +105,54 @@ export function DishManager({ sessionId, dishes }: Props) {
             Aucun plat sélectionné. Choisissez dans le catalogue ci-dessous.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {dishes.map((dish) => (
-              <div
-                key={dish.id}
-                className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full pl-1 pr-3 py-1"
-              >
-                {dish.imageUrl && (
-                  <div className="relative w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                    <Image
-                      src={dish.imageUrl}
-                      alt={dish.name}
-                      fill
-                      sizes="24px"
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-                <span className="text-xs font-medium text-orange-700">
-                  {dish.name}
-                </span>
-                <button
-                  onClick={() => removeDish(dish.id)}
-                  disabled={isPending}
-                  className="text-orange-400 hover:text-red-500 transition-colors text-xs leading-none"
-                  aria-label={`Retirer ${dish.name}`}
-                >
-                  ✕
-                </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowSelected(!showSelected)}
+              className="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              <span>🍽️ Consulter la sélection ({dishes.length})</span>
+              <span className={`text-gray-400 transition-transform ${showSelected ? "rotate-180" : ""}`}>
+                ▼
+              </span>
+            </button>
+            
+            {showSelected && (
+              <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div className="p-2 space-y-1">
+                  {dishes.map((dish) => (
+                    <div
+                      key={dish.id}
+                      className="flex items-center justify-between bg-gray-50 hover:bg-orange-50 border border-transparent hover:border-orange-200 rounded-lg p-2 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {dish.imageUrl && (
+                          <div className="relative w-8 h-8 rounded-md overflow-hidden flex-shrink-0">
+                            <Image
+                              src={dish.imageUrl}
+                              alt={dish.name}
+                              fill
+                              sizes="32px"
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                        <span className="text-sm font-medium text-gray-900">
+                          {dish.name}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => removeDish(dish.id)}
+                        disabled={isPending}
+                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full w-7 h-7 flex items-center justify-center transition-colors disabled:opacity-50"
+                        aria-label={`Retirer ${dish.name}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>

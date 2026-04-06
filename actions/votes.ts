@@ -80,7 +80,12 @@ export async function getPeopleResults(sessionId: string) {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
   });
-  if (!session || session.hostId !== user.id) return null;
+  if (!session) return null;
+
+  const membership = await prisma.sessionMember.findUnique({
+    where: { sessionId_userId: { sessionId, userId: user.id } },
+  });
+  if (session.hostId !== user.id && !membership) return null;
 
   const members = await prisma.sessionMember.findMany({
     where: { sessionId },
@@ -112,7 +117,12 @@ export async function getDishResults(sessionId: string) {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
   });
-  if (!session || session.hostId !== user.id) return null;
+  if (!session) return null;
+
+  const membership = await prisma.sessionMember.findUnique({
+    where: { sessionId_userId: { sessionId, userId: user.id } },
+  });
+  if (session.hostId !== user.id && !membership) return null;
 
   const dishes = await prisma.dish.findMany({
     where: { sessionId },

@@ -83,7 +83,7 @@ export function VotingInterface({
     <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-3 overflow-x-auto scrollbar-hide">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0" title="Retour à l'accueil">
+          <Link href={`/host/${sessionId}`} className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0" title="Retour à la session">
             ←
           </Link>
           <span className="text-sm font-medium text-gray-700 whitespace-nowrap">{userName}</span>

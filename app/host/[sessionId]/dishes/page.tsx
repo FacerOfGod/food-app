@@ -48,32 +48,34 @@ export default async function DishesPage({ params }: Props) {
       </header>
 
       {/* Tab switcher */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-3xl mx-auto px-4 flex gap-1 pt-2 overflow-x-auto scrollbar-hide">
-          <Link
-            href={`/host/${session.id}`}
-            className="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors text-gray-500 hover:text-gray-700 whitespace-nowrap"
-          >
-            👤 Par personne
-          </Link>
-          <Link
-            href={`/host/${session.id}?view=dishes`}
-            className="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors text-gray-500 hover:text-gray-700 whitespace-nowrap"
-          >
-            🍽️ Par plat
-          </Link>
-          <Link
-            href={`/host/${session.id}/dishes`}
-            className="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors bg-orange-50 text-orange-600 border-b-2 border-orange-500 whitespace-nowrap"
-          >
-            ⚙️ Gestion des plats
-          </Link>
-          <Link
-            href={`/vote/${session.id}`}
-            className="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors text-orange-600 hover:bg-orange-50 whitespace-nowrap flex items-center gap-1"
-          >
-            👉 Rejoindre
-          </Link>
+      <div className="bg-white border-b border-gray-200 py-3">
+        <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
+          <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
+            <Link
+              href={`/host/${session.id}`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+            >
+              Par personne
+            </Link>
+            <Link
+              href={`/host/${session.id}?view=dishes`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+            >
+              Par plat
+            </Link>
+            <Link
+              href={`/host/${session.id}/dishes`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-white text-gray-900 shadow-sm"
+            >
+              Gestion des plats
+            </Link>
+            <Link
+              href={`/vote/${session.id}`}
+              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
+            >
+              Voter
+            </Link>
+          </div>
         </div>
       </div>
 
