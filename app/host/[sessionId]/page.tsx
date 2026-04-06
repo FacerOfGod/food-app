@@ -4,6 +4,7 @@ import { getPeopleResults, getDishResults, getVotingData } from "@/actions/votes
 import { PeopleView } from "@/components/host/PeopleView";
 import { DishesView } from "@/components/host/DishesView";
 import { VotingInterface } from "@/components/vote/VotingInterface";
+import { GuestDishAdder } from "@/components/vote/GuestDishAdder";
 import { logoutAction } from "@/actions/auth";
 
 interface Props {
@@ -99,6 +100,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
                 Gestion des plats
               </Link>
             )}
+            <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
           </div>
         </div>
       </div>

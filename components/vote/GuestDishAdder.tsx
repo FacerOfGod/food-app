@@ -52,10 +52,9 @@ export function GuestDishAdder({ sessionId, existingDishNames }: Props) {
 
   return (
     <>
-      {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="text-xs text-orange-500 font-medium hover:text-orange-700 transition-colors"
+        className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-100 text-orange-700 hover:bg-orange-200 flex-shrink-0"
       >
         + Proposer un plat
       </button>

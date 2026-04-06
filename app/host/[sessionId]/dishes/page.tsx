@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSessionDishes } from "@/actions/dishes";
 import { DishManager } from "@/components/host/DishManager";
 import { CopyButton } from "@/components/host/CopyButton";
+import { GuestDishAdder } from "@/components/vote/GuestDishAdder";
 import { logoutAction } from "@/actions/auth";
 
 interface Props {
@@ -81,6 +82,7 @@ export default async function DishesPage({ params }: Props) {
             >
               Gestion des plats
             </Link>
+            <GuestDishAdder sessionId={session.id} existingDishNames={session.dishes.map(d=>d.name)} />
           </div>
         </div>
       </div>

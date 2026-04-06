@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { submitVoteAction } from "@/actions/votes";
-import { GuestDishAdder } from "./GuestDishAdder";
 
 export const RATINGS = [
   { value: 1, label: "Éviter",     emoji: "🙅", color: "bg-red-300 text-red-900 border-red-300 hover:bg-red-400 active:bg-red-500" },
@@ -83,13 +82,6 @@ export function VotingInterface({
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="flex items-center justify-between px-4 py-2 bg-white">
-        <span className="text-xs text-gray-500 font-medium">
-          {votedCount} / {totalDishes} notés
-        </span>
-        <GuestDishAdder sessionId={sessionId} existingDishNames={existingDishNames} />
-      </div>
-
       <div className="h-1.5 bg-gray-100">
         <div
           className="h-full bg-orange-400 transition-all duration-700 ease-out"
