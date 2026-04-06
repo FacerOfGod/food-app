@@ -2,12 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, clearUserCookie } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 
 export async function createSessionAction(_prevState: unknown, formData: FormData) {
   const user = await getCurrentUser();
   if (!user) {
-    await clearUserCookie();
     redirect("/");
   }
 
@@ -36,7 +35,6 @@ export async function createSessionAction(_prevState: unknown, formData: FormDat
 export async function getHostSessions() {
   const user = await getCurrentUser();
   if (!user) {
-    await clearUserCookie();
     return null;
   }
 

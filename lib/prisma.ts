@@ -11,4 +11,6 @@ function createPrisma() {
 
 export const prisma = globalForPrisma.prisma ?? createPrisma();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// Always cache — prevents creating a new libSQL connection per request in production,
+// which would cause writes from one request to be invisible to the next.
+globalForPrisma.prisma = prisma;
