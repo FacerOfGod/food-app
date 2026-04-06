@@ -4,7 +4,7 @@ import { prisma } from "./prisma";
 const COOKIE_NAME = "user_id";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: false, // temporarily disable secure constraint for HTTP compatibility
   sameSite: "lax" as const,
   path: "/",
   maxAge: 60 * 60 * 24 * 30, // 30 days
