@@ -2,11 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, clearUserCookie } from "@/lib/session";
 
 export async function createSessionAction(_prevState: unknown, formData: FormData) {
   const user = await getCurrentUser();
-  if (!user) redirect("/");
+  if (!user) {
+    await clearUserCookie();
+    redirect("/");
+  }
 
   const name = (formData.get("name") as string)?.trim();
   if (!name) return { error: "Veuillez donner un nom à la session." };
@@ -32,7 +35,10 @@ export async function createSessionAction(_prevState: unknown, formData: FormDat
 
 export async function getHostSessions() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) {
+    await clearUserCookie();
+    return null;
+  }
 
   const sessions = await prisma.session.findMany({
     where: { hostId: user.id },
