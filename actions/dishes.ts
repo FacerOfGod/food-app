@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, getUserId } from "@/lib/session";
 
 async function assertHostAccess(sessionId: string) {
   const user = await getCurrentUser();
@@ -156,8 +156,11 @@ export async function removeDishAction(_prevState: unknown, formData: FormData) 
 }
 
 export async function getSessionDishes(sessionId: string) {
+  const userId = await getUserId();
+  if (!userId) throw new Error(`getSessionDishes: cookie user_id est vide`);
+
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) throw new Error(`getSessionDishes: user introuvable en DB pour l'ID cookie = ${userId}`);
 
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
@@ -166,7 +169,8 @@ export async function getSessionDishes(sessionId: string) {
     },
   });
 
-  if (!session || session.hostId !== user.id) return null;
+  if (!session) throw new Error(`getSessionDishes: session ${sessionId} introuvable en DB`);
+  if (session.hostId !== user.id) throw new Error(`getSessionDishes: session.hostId=${session.hostId} !== user.id=${user.id}`);
 
   return { session, user };
 }

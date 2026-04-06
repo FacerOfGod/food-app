@@ -2,12 +2,13 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, getUserId } from "@/lib/session";
 
 export async function createSessionAction(_prevState: unknown, formData: FormData) {
-  const user = await getCurrentUser();
+  const userId = await getUserId();
+  const user = userId ? await getCurrentUser() : null;
   if (!user) {
-    redirect("/");
+    return { error: `Auth échouée (cookie user_id = ${userId ?? "vide"}) — rechargez la page ou reconnectez-vous.` };
   }
 
   const name = (formData.get("name") as string)?.trim();
