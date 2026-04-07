@@ -5,6 +5,7 @@ import { PeopleView } from "@/components/host/PeopleView";
 import { DishesView } from "@/components/host/DishesView";
 import { VotingInterface } from "@/components/vote/VotingInterface";
 import { GuestDishAdder } from "@/components/vote/GuestDishAdder";
+import { CopyButton } from "@/components/host/CopyButton";
 import { logoutAction } from "@/actions/auth";
 
 interface Props {
@@ -30,6 +31,8 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
   const { session, currentUser } = peopleData;
   const isHost = session.hostId === currentUser.id;
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const joinLink = `${origin}/join/${session.id}`;
 
   return (
     <main className="min-h-screen bg-[#fafaf9]">
@@ -56,7 +59,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
       {/* Tab switcher */}
       <div className="bg-white border-b border-gray-200 py-3">
         <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
+          <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max items-center">
             <Link
               href={`/host/${sessionId}?view=mes-choix`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
@@ -87,6 +90,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
             >
               Par plat
             </Link>
+            <CopyButton text={joinLink} compact />
             <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
             <Link
               href={`/host/${sessionId}?view=vote`}
