@@ -57,7 +57,7 @@ export function GuestDishAdder({ sessionId, existingDishNames }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-100 text-orange-700 hover:bg-orange-200 flex-shrink-0"
+        className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700 flex-shrink-0"
       >
         Proposer
       </button>

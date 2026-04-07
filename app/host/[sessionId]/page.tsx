@@ -90,13 +90,13 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
                 Gestion des plats
               </Link>
             )}
+            <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
             <Link
               href={`/host/${sessionId}?view=vote`}
               className="px-4 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-500 text-white shadow-sm ml-2 hover:bg-orange-600"
             >
               Voter
             </Link>
-            <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
           </div>
         </div>
       </div>
