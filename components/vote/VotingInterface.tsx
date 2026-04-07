@@ -7,11 +7,11 @@ import Link from "next/link";
 import { submitVoteAction } from "@/actions/votes";
 
 export const RATINGS = [
-  { value: 1, label: "Éviter",     emoji: "🙅", color: "bg-red-300 text-red-900 border-red-300 hover:bg-red-400 active:bg-red-500" },
-  { value: 2, label: "N'aime pas", emoji: "😕", color: "bg-red-200 text-red-800 border-red-300 hover:bg-red-300 active:bg-red-400" },
-  { value: 3, label: "Neutre",     emoji: "😐", color: "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300 active:bg-gray-400" },
-  { value: 4, label: "J'aime",     emoji: "😋", color: "bg-green-200 text-green-800 border-green-300 hover:bg-green-300 active:bg-green-400" },
-  { value: 5, label: "J'adore !",  emoji: "😍", color: "bg-green-300 text-green-900 border-green-300 hover:bg-green-400 active:bg-green-500" },
+  { value: 1, label: "Éviter",     dot: "bg-red-800",     ring: "ring-red-800"     },
+  { value: 2, label: "N'aime pas", dot: "bg-red-400",     ring: "ring-red-400"     },
+  { value: 3, label: "Neutre",     dot: "bg-gray-400",    ring: "ring-gray-400"    },
+  { value: 4, label: "J'aime",     dot: "bg-emerald-600", ring: "ring-emerald-600" },
+  { value: 5, label: "J'adore",    dot: "bg-emerald-900", ring: "ring-emerald-900" },
 ];
 
 interface Dish {
@@ -55,6 +55,7 @@ export function VotingInterface({
   
   // For review mode: which dish is being edited
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  const [visibleCount, setVisibleCount] = useState(20);
 
   const voteMap = new Map(userVotes.map((v) => [v.dishId, v.rating]));
   const progress = Math.round((votedCount / totalDishes) * 100);
@@ -62,6 +63,10 @@ export function VotingInterface({
 
   const normalizeSearch = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const searchNormalized = normalizeSearch(searchQuery);
+  const filteredDishes = dishes.filter(d =>
+    normalizeSearch(d.name).includes(searchNormalized) ||
+    (d.category && normalizeSearch(d.category).includes(searchNormalized))
+  );
 
   async function vote(dishId: string, rating: number) {
     if (isPending) return;
@@ -104,17 +109,14 @@ export function VotingInterface({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(20); }}
               placeholder="Rechercher un plat…"
               className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
 
           <div className="space-y-2">
-            {dishes.filter(d => 
-              normalizeSearch(d.name).includes(searchNormalized) ||
-              (d.category && normalizeSearch(d.category).includes(searchNormalized))
-            ).map((dish) => {
+            {filteredDishes.slice(0, visibleCount).map((dish) => {
               const rating = voteMap.get(dish.id) ?? null;
               const ratingMeta = rating ? RATINGS.find((r) => r.value === rating) : null;
               const isEditing = editingDish?.id === dish.id;
@@ -153,10 +155,9 @@ export function VotingInterface({
                       )}
                     </div>
                     {ratingMeta ? (
-                      <span
-                        className={`flex-shrink-0 text-xs font-medium px-2 py-1 rounded-full border ${ratingMeta.color}`}
-                      >
-                        {ratingMeta.emoji} {ratingMeta.label}
+                      <span className="flex-shrink-0 flex items-center gap-1.5 text-xs text-gray-600">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${ratingMeta.dot}`} />
+                        {ratingMeta.label}
                       </span>
                     ) : (
                       <span className="flex-shrink-0 text-xs text-gray-300 italic">
@@ -170,19 +171,19 @@ export function VotingInterface({
 
                   {/* Inline rating picker */}
                   {isEditing && (
-                    <div className="flex gap-1.5 px-3 pb-3 pt-1">
+                    <div className="relative flex items-start border-t border-gray-100 px-2 pt-3 pb-2">
+                      <div className="absolute left-[calc(10%)] right-[calc(10%)] top-[1.65rem] h-px bg-gray-300" />
                       {RATINGS.map((r) => (
                         <button
                           key={r.value}
                           onClick={() => vote(dish.id, r.value)}
                           disabled={isPending}
-                          className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl border-2 transition-all text-center
-                            ${rating === r.value ? "ring-2 ring-offset-1 ring-gray-400 scale-95" : ""}
-                            ${r.color}
-                            disabled:cursor-not-allowed`}
+                          className="flex-1 flex flex-col items-center gap-1.5 relative disabled:cursor-not-allowed group"
                         >
-                          <span className="text-lg">{r.emoji}</span>
-                          <span className="text-[9px] font-medium leading-tight">{r.label}</span>
+                          <span className={`w-3 h-3 rounded-full border-2 border-white ring-1 ring-gray-300 transition-all ${r.dot}
+                            ${rating === r.value ? "scale-125 ring-0" : "opacity-50 group-hover:opacity-100"}`}
+                          />
+                          <span className="text-[9px] font-medium text-gray-500 leading-tight text-center">{r.label}</span>
                         </button>
                       ))}
                     </div>
@@ -191,16 +192,31 @@ export function VotingInterface({
               );
             })}
           </div>
+
+          {filteredDishes.length > visibleCount && (
+            <button
+              onClick={() => setVisibleCount((n) => n + 20)}
+              className="w-full mt-3 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200 transition-colors"
+            >
+              Voir plus ({filteredDishes.length - visibleCount} restants)
+            </button>
+          )}
         </div>
+      ) : nextDish === null ? (
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 text-center">
+        <div className="text-4xl mb-2">🎉</div>
+        <p className="font-semibold text-gray-900">Tout noté !</p>
+        <p className="text-xs text-gray-400 mt-1">Passez en "mes choix" pour modifier vos notes.</p>
+      </div>
       ) : (
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         <div className="w-full max-w-sm">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
             <div className="relative w-full h-52 bg-gray-100">
-              {nextDish!.imageUrl ? (
+              {nextDish.imageUrl ? (
                 <Image
-                  src={nextDish!.imageUrl}
-                  alt={nextDish!.name}
+                  src={nextDish.imageUrl}
+                  alt={nextDish.name}
                   fill
                   sizes="(max-width: 640px) 100vw, 384px"
                   className="object-cover"
@@ -213,28 +229,29 @@ export function VotingInterface({
               )}
             </div>
             <div className="px-5 py-4 text-center">
-              {(nextDish!.category || nextDish!.proposer?.name) && (
+              {(nextDish.category || nextDish.proposer?.name) && (
                 <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">
-                  {[nextDish!.category, nextDish!.proposer?.name ? `par ${nextDish!.proposer.name}` : ""].filter(Boolean).join(" • ")}
+                  {[nextDish.category, nextDish.proposer?.name ? `par ${nextDish.proposer.name}` : ""].filter(Boolean).join(" • ")}
                 </p>
               )}
-              <h2 className="text-xl font-bold text-gray-900">{nextDish!.name}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{nextDish.name}</h2>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="relative flex items-start w-full px-2 pt-2 pb-1">
+            {/* horizontal connecting line */}
+            <div className="absolute left-[calc(10%)] right-[calc(10%)] top-[1.15rem] h-px bg-gray-300" />
             {RATINGS.map((r) => (
               <button
                 key={r.value}
-                onClick={() => vote(nextDish!.id, r.value)}
+                onClick={() => vote(nextDish.id, r.value)}
                 disabled={isPending}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all duration-150 select-none
-                  ${selected === r.value ? "scale-95 opacity-60" : ""}
-                  ${r.color}
-                  disabled:cursor-not-allowed`}
+                className="flex-1 flex flex-col items-center gap-2 relative disabled:cursor-not-allowed group"
               >
-                <span className="text-2xl">{r.emoji}</span>
-                <span className="text-[10px] font-medium leading-tight text-center">{r.label}</span>
+                <span className={`w-4 h-4 rounded-full border-2 border-white ring-1 ring-gray-300 transition-all ${r.dot}
+                  ${selected === r.value ? "scale-125 ring-0" : "opacity-50 group-hover:opacity-100"}`}
+                />
+                <span className="text-[9px] font-medium text-gray-500 leading-tight text-center">{r.label}</span>
               </button>
             ))}
           </div>

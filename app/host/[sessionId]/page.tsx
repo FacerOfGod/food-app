@@ -6,7 +6,9 @@ import { DishesView } from "@/components/host/DishesView";
 import { VotingInterface } from "@/components/vote/VotingInterface";
 import { GuestDishAdder } from "@/components/vote/GuestDishAdder";
 import { CopyButton } from "@/components/host/CopyButton";
+import { TabBar } from "@/components/host/TabBar";
 import { logoutAction } from "@/actions/auth";
+import { seedPresetDishesAction } from "@/actions/dishes";
 
 interface Props {
   params: Promise<{ sessionId: string }>;
@@ -19,6 +21,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
   const activeView = view === "dishes" ? "dishes"
                    : view === "people" ? "people"
                    : view === "mes-choix" ? "mes-choix"
+                   : view === "proposer" ? "proposer"
                    : "vote"; // default to vote
 
   const [peopleData, dishData, votingData] = await Promise.all([
@@ -29,6 +32,8 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
   if (!peopleData || !dishData || !votingData) redirect("/dashboard");
 
+  if (activeView === "proposer") await seedPresetDishesAction(sessionId);
+
   const { session, currentUser } = peopleData;
   const isHost = session.hostId === currentUser.id;
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
@@ -36,25 +41,18 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
   return (
     <main className="min-h-screen bg-[#fafaf9]">
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center relative">
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0">
-            ← Retour
+            ←
           </Link>
           <span className="text-gray-300">|</span>
           <span className="font-semibold text-gray-900 text-sm truncate">
             {session.name}
           </span>
         </div>
-        <div className="absolute left-1/2 -translate-x-1/2">
-          <CopyButton text={joinLink} compact />
-        </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          {isHost && (
-            <Link href={`/host/${sessionId}/dishes`} className="text-sm text-gray-400 hover:text-gray-600">
-              Gestion des plats
-            </Link>
-          )}
+          <CopyButton text={joinLink} compact />
           <form action={logoutAction}>
             <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
               Déco.
@@ -63,55 +61,26 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
         </div>
       </header>
 
-      {/* Tab switcher */}
-      <div className="bg-white border-b border-gray-200 py-3">
-        <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
-            <Link
-              href={`/host/${sessionId}?view=mes-choix`}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeView === "mes-choix"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Mes choix
-            </Link>
-            <Link
-              href={`/host/${sessionId}?view=people`}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeView === "people"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Personne
-            </Link>
-            <Link
-              href={`/host/${sessionId}?view=dishes`}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeView === "dishes"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Plat
-            </Link>
-            <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
-            <Link
-              href={`/host/${sessionId}?view=vote`}
-              className="px-4 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-500 text-white shadow-sm ml-2 hover:bg-orange-600"
-            >
-              Voter
-            </Link>
-          </div>
-        </div>
-      </div>
+      <TabBar sessionId={sessionId} isHost={isHost} />
 
-      <div className="max-w-3xl mx-auto py-6">
+      <div className="max-w-3xl mx-auto px-4">
+        {activeView !== "vote" && (
+          <div className="pt-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 flex items-start gap-2">
+              <span className="flex-shrink-0 w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center mt-0.5">i</span>
+              <span>
+                {activeView === "mes-choix" && "Retrouve tous les plats et modifie tes votes à tout moment."}
+                {activeView === "people" && "Voir qui a rejoint la session et combien de plats chacun a votés."}
+                {activeView === "dishes" && "Classement des plats selon les votes de tous les participants."}
+                {activeView === "proposer" && "Suggère un nouveau plat à ajouter à la session. Faire la recherche, et ajouter si l'aliment n'existe pas."}
+              </span>
+            </div>
+          </div>
+        )}
+
         {activeView === "vote" || activeView === "mes-choix" ? (
           votingData.totalDishes === 0 ? (
-            <div className="text-center px-4">
+            <div className="text-center py-4">
               <div className="text-5xl mb-4">🍽️</div>
               <h1 className="text-xl font-bold text-gray-900 mb-2">
                 Aucun plat pour l&apos;instant
@@ -133,13 +102,14 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
             />
           )
         ) : activeView === "people" ? (
-          <div className="px-4">
-            <PeopleView members={peopleData.members} dishes={peopleData.dishes} />
-          </div>
+          <div className="py-4"><PeopleView members={peopleData.members} dishes={peopleData.dishes} /></div>
+        ) : activeView === "proposer" ? (
+          <GuestDishAdder
+            sessionId={sessionId}
+            existingDishes={votingData.dishes.map(d => ({ id: d.id, name: d.name, imageUrl: d.imageUrl, authorsJson: d.authorsJson }))}
+          />
         ) : (
-          <div className="px-4">
-            <DishesView dishStats={dishData.dishStats} />
-          </div>
+          <div className="py-4"><DishesView dishStats={dishData.dishStats} /></div>
         )}
       </div>
     </main>

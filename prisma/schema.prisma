@@ -59,9 +59,10 @@ model Dish {
   session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   proposerId String?
   proposer   User?    @relation("ProposedDishes", fields: [proposerId], references: [id])
-  order      Int      @default(0)
-  votes      Vote[]
-  createdAt  DateTime @default(now())
+  order       Int      @default(0)
+  authorsJson String   @default("[]")
+  votes       Vote[]
+  createdAt   DateTime @default(now())
 }
 
 model Vote {

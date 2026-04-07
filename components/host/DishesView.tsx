@@ -24,6 +24,7 @@ interface Props {
 export function DishesView({ dishStats }: Props) {
   const [selectedDish, setSelectedDish] = useState<DishStat | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(20);
 
   if (dishStats.length === 0) {
     return (
@@ -40,6 +41,7 @@ export function DishesView({ dishStats }: Props) {
     normalizeSearch(d.name).includes(searchNormalized) ||
     (d.category && normalizeSearch(d.category).includes(searchNormalized))
   );
+  const visibleDishes = filteredDishes.slice(0, visibleCount);
 
   return (
     <>
@@ -47,7 +49,7 @@ export function DishesView({ dishStats }: Props) {
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(20); }}
           placeholder="Rechercher un plat…"
           className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
         />
@@ -56,7 +58,7 @@ export function DishesView({ dishStats }: Props) {
       <div className="space-y-3">
         {filteredDishes.length === 0 ? (
           <p className="text-center text-sm text-gray-400 py-4">Aucun résultat.</p>
-        ) : filteredDishes.map((dish) => {
+        ) : visibleDishes.map((dish) => {
           const likeCount = dish.likers.length;
           const dislikeCount = dish.dislikers.length;
           const total = dish.totalVotes;
@@ -120,6 +122,15 @@ export function DishesView({ dishStats }: Props) {
           );
         })}
       </div>
+
+      {filteredDishes.length > visibleCount && (
+        <button
+          onClick={() => setVisibleCount((n) => n + 20)}
+          className="w-full mt-3 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200 transition-colors"
+        >
+          Voir plus ({filteredDishes.length - visibleCount} restants)
+        </button>
+      )}
 
       {/* Dislikers modal */}
       {selectedDish && (
