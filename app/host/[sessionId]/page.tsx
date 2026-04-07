@@ -36,25 +36,31 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
   return (
     <main className="min-h-screen bg-[#fafaf9]">
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">
-          ← Retour
-        </Link>
-        <span className="text-gray-300">|</span>
-        <span className="font-semibold text-gray-900 text-sm truncate flex-1">
-          {session.name}
-        </span>
-        {isHost && (
-          <Link href={`/host/${sessionId}/dishes`} className="text-sm text-gray-400 hover:text-gray-600 flex-shrink-0">
-            Gestion des plats
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center relative">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0">
+            ← Retour
           </Link>
-        )}
-        <CopyButton text={joinLink} compact />
-        <form action={logoutAction}>
-          <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
-            Déco.
-          </button>
-        </form>
+          <span className="text-gray-300">|</span>
+          <span className="font-semibold text-gray-900 text-sm truncate">
+            {session.name}
+          </span>
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <CopyButton text={joinLink} compact />
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {isHost && (
+            <Link href={`/host/${sessionId}/dishes`} className="text-sm text-gray-400 hover:text-gray-600">
+              Gestion des plats
+            </Link>
+          )}
+          <form action={logoutAction}>
+            <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
+              Déco.
+            </button>
+          </form>
+        </div>
       </header>
 
       {/* Tab switcher */}
@@ -79,7 +85,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Par personne
+              Personne
             </Link>
             <Link
               href={`/host/${sessionId}?view=dishes`}
@@ -89,7 +95,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Par plat
+              Plat
             </Link>
             <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
             <Link

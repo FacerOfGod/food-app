@@ -33,23 +33,29 @@ export default async function DishesPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-[#fafaf9]">
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0">
-          ← Retour
-        </Link>
-        <span className="text-gray-300">|</span>
-        <span className="font-semibold text-gray-900 text-sm truncate flex-1">
-          {session.name}
-        </span>
-        <Link href={`/host/${session.id}/dishes`} className="text-sm text-gray-400 hover:text-gray-600 flex-shrink-0">
-          Gestion des plats
-        </Link>
-        <CopyButton text={joinLink} compact />
-        <form action={logoutAction}>
-          <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
-            Déco.
-          </button>
-        </form>
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center relative">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0">
+            ← Retour
+          </Link>
+          <span className="text-gray-300">|</span>
+          <span className="font-semibold text-gray-900 text-sm truncate">
+            {session.name}
+          </span>
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <CopyButton text={joinLink} compact />
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <Link href={`/host/${session.id}/dishes`} className="text-sm text-gray-400 hover:text-gray-600">
+            Gestion des plats
+          </Link>
+          <form action={logoutAction}>
+            <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
+              Déco.
+            </button>
+          </form>
+        </div>
       </header>
 
       {/* Tab switcher */}
@@ -67,13 +73,13 @@ export default async function DishesPage({ params }: Props) {
               href={`/host/${session.id}?view=people`}
               className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
             >
-              Par personne
+              Personne
             </Link>
             <Link
               href={`/host/${session.id}?view=dishes`}
               className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
             >
-              Par plat
+              Plat
             </Link>
             <GuestDishAdder sessionId={session.id} existingDishNames={session.dishes.map(d=>d.name)} />
             <Link
