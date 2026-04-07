@@ -41,6 +41,9 @@ export default async function DishesPage({ params }: Props) {
         <span className="font-semibold text-gray-900 text-sm truncate flex-1">
           {session.name}
         </span>
+        <Link href={`/host/${session.id}/dishes`} className="text-sm text-gray-900 font-semibold flex-shrink-0">
+          Gestion des plats
+        </Link>
         <form action={logoutAction}>
           <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
             Déco.
@@ -71,19 +74,13 @@ export default async function DishesPage({ params }: Props) {
             >
               Par plat
             </Link>
-            <Link
-              href={`/host/${session.id}/dishes`}
-              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-white text-gray-900 shadow-sm"
-            >
-              Gestion des plats
-            </Link>
+            <GuestDishAdder sessionId={session.id} existingDishNames={session.dishes.map(d=>d.name)} />
             <Link
               href={`/host/${session.id}?view=vote`}
               className="px-4 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-500 text-white shadow-sm ml-2 hover:bg-orange-600"
             >
               Voter
             </Link>
-            <GuestDishAdder sessionId={session.id} existingDishNames={session.dishes.map(d=>d.name)} />
           </div>
         </div>
       </div>

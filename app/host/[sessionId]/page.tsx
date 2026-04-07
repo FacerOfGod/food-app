@@ -41,6 +41,11 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
         <span className="font-semibold text-gray-900 text-sm truncate flex-1">
           {session.name}
         </span>
+        {isHost && (
+          <Link href={`/host/${sessionId}/dishes`} className="text-sm text-gray-400 hover:text-gray-600 flex-shrink-0">
+            Gestion des plats
+          </Link>
+        )}
         <form action={logoutAction}>
           <button type="submit" className="text-sm text-gray-400 hover:text-gray-600">
             Déco.
@@ -82,14 +87,6 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
             >
               Par plat
             </Link>
-            {isHost && (
-              <Link
-                href={`/host/${sessionId}/dishes`}
-                className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-gray-700"
-              >
-                Gestion des plats
-              </Link>
-            )}
             <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
             <Link
               href={`/host/${sessionId}?view=vote`}
