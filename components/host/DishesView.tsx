@@ -33,9 +33,12 @@ export function DishesView({ dishStats }: Props) {
     );
   }
 
+  const normalizeSearch = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const searchNormalized = normalizeSearch(searchQuery);
+
   const filteredDishes = dishStats.filter(d =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (d.category && d.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    normalizeSearch(d.name).includes(searchNormalized) ||
+    (d.category && normalizeSearch(d.category).includes(searchNormalized))
   );
 
   return (

@@ -26,10 +26,13 @@ export function GuestDishAdder({ sessionId, existingDishNames }: Props) {
 
   const existingSet = new Set(existingDishNames.map((n) => n.toLowerCase()));
 
+  const normalizeSearch = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const searchNormalized = normalizeSearch(search);
+
   const filtered = DISHES_PRESET.filter((d) => {
     const matchSearch =
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      d.category.toLowerCase().includes(search.toLowerCase());
+      normalizeSearch(d.name).includes(searchNormalized) ||
+      normalizeSearch(d.category).includes(searchNormalized);
     const matchCat =
       activeCategory === "Tous" || d.category === activeCategory;
     return matchSearch && matchCat;
@@ -56,7 +59,7 @@ export function GuestDishAdder({ sessionId, existingDishNames }: Props) {
         onClick={() => setOpen(true)}
         className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-100 text-orange-700 hover:bg-orange-200 flex-shrink-0"
       >
-        + Proposer un plat
+        Proposer
       </button>
 
       {/* Backdrop + panel */}

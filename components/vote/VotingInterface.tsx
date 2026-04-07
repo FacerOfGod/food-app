@@ -60,6 +60,9 @@ export function VotingInterface({
   const progress = Math.round((votedCount / totalDishes) * 100);
   const remaining = totalDishes - votedCount;
 
+  const normalizeSearch = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const searchNormalized = normalizeSearch(searchQuery);
+
   async function vote(dishId: string, rating: number) {
     if (isPending) return;
     setSelected(rating);
@@ -83,12 +86,7 @@ export function VotingInterface({
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="h-1.5 bg-gray-100">
-        <div
-          className="h-full bg-orange-400 transition-all duration-700 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+
 
       {viewMode === "mes-choix" ? (
         <div className="max-w-lg mx-auto w-full px-4 py-6">
@@ -114,8 +112,8 @@ export function VotingInterface({
 
           <div className="space-y-2">
             {dishes.filter(d => 
-              d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              (d.category && d.category.toLowerCase().includes(searchQuery.toLowerCase()))
+              normalizeSearch(d.name).includes(searchNormalized) ||
+              (d.category && normalizeSearch(d.category).includes(searchNormalized))
             ).map((dish) => {
               const rating = voteMap.get(dish.id) ?? null;
               const ratingMeta = rating ? RATINGS.find((r) => r.value === rating) : null;
