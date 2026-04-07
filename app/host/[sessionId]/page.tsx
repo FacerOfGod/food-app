@@ -53,16 +53,6 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
         <div className="max-w-3xl mx-auto px-4 overflow-x-auto scrollbar-hide">
           <div className="flex bg-gray-100 rounded-lg p-1 flex-shrink-0 min-w-max">
             <Link
-              href={`/host/${sessionId}?view=vote`}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeView === "vote"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Voter
-            </Link>
-            <Link
               href={`/host/${sessionId}?view=mes-choix`}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 activeView === "mes-choix"
@@ -100,6 +90,12 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
                 Gestion des plats
               </Link>
             )}
+            <Link
+              href={`/host/${sessionId}?view=vote`}
+              className="px-4 py-1.5 text-xs font-medium rounded-md transition-colors bg-orange-500 text-white shadow-sm ml-2 hover:bg-orange-600"
+            >
+              Voter
+            </Link>
             <GuestDishAdder sessionId={sessionId} existingDishNames={votingData.dishes.map(d=>d.name)} />
           </div>
         </div>

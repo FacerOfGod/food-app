@@ -37,6 +37,14 @@ interface Props {
 
 export function PeopleView({ members, dishes }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expandedDishes, setExpandedDishes] = useState<Set<string>>(new Set());
+
+  const toggleDish = (id: string) => {
+    const next = new Set(expandedDishes);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setExpandedDishes(next);
+  };
 
   const toggleSelect = (id: string) => {
     const next = new Set(selectedIds);
@@ -187,7 +195,10 @@ export function PeopleView({ members, dishes }: Props) {
                 key={dish.id}
                 className={`rounded-xl border ${headerColor} overflow-hidden shadow-sm`}
               >
-                <div className="px-4 py-3 border-b border-gray-100/50 flex align-center justify-between">
+                <button
+                  onClick={() => toggleDish(dish.id)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left"
+                >
                   <div className="flex gap-3 items-center">
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${rankColor}`}
@@ -205,20 +216,24 @@ export function PeopleView({ members, dishes }: Props) {
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-gray-900">
-                      {dish.avgRating > 0 ? dish.avgRating.toFixed(1) : "—"}{" "}
-                      <span className="text-xs font-normal text-gray-400">
-                        / 5
-                      </span>
-                    </p>
-                    <p className="text-[10px] text-gray-400">
-                      {dish.count} vote{dish.count !== 1 ? "s" : ""}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-gray-900">
+                        {dish.avgRating > 0 ? dish.avgRating.toFixed(1) : "—"}{" "}
+                        <span className="text-xs font-normal text-gray-400">
+                          / 5
+                        </span>
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {dish.count} vote{dish.count !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <span className={`text-gray-400 text-xs transition-transform ${expandedDishes.has(dish.id) ? "rotate-180" : ""}`}>▼</span>
                   </div>
-                </div>
+                </button>
 
-                <div className="px-4 py-3 bg-white/50 space-y-2">
+                {expandedDishes.has(dish.id) && (
+                <div className="px-4 py-3 bg-white/50 space-y-2 border-t border-gray-100/50">
                   {dish.individualVotes.map((iv) => {
                     const m = members.find((x) => x.id === iv.memberId)!;
                     const ratingMeta = iv.rating
@@ -250,6 +265,7 @@ export function PeopleView({ members, dishes }: Props) {
                     );
                   })}
                 </div>
+                )}
               </div>
             );
           })}
