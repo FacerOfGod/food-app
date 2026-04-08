@@ -30,7 +30,7 @@ export async function createSessionAction(_prevState: unknown, formData: FormDat
     return { error: `Erreur DB: ${msg}` };
   }
 
-  redirect(`/host/${session.id}/dishes`);
+  redirect(`/host/${session.id}`);
 }
 
 export async function getHostSessions() {
@@ -42,7 +42,7 @@ export async function getHostSessions() {
   const sessions = await prisma.session.findMany({
     where: { hostId: user.id },
     include: {
-      _count: { select: { members: true, dishes: true } },
+      _count: { select: { members: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -53,7 +53,7 @@ export async function getHostSessions() {
       members: { some: { userId: user.id } }
     },
     include: {
-      _count: { select: { members: true, dishes: true } },
+      _count: { select: { members: true } },
     },
     orderBy: { createdAt: "desc" },
   });

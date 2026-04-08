@@ -16,7 +16,6 @@ interface ExistingDish {
 }
 
 interface Props {
-  sessionId: string;
   existingDishes: ExistingDish[];
 }
 
@@ -85,7 +84,7 @@ function PhotoPicker({
             >
               <Image src={photo.thumb} alt={photo.alt} fill sizes="80px" className="object-cover" />
               {imageUrl === photo.url && (
-                <div className="absolute inset-0 bg-white0/30 flex items-center justify-center">
+                <div className="absolute inset-0 bg-orange-500/30 flex items-center justify-center">
                   <span className="text-white text-sm font-bold">✓</span>
                 </div>
               )}
@@ -174,7 +173,7 @@ function SessionDishRow({
           <div className="flex gap-2 pt-1">
             <button onClick={onToggleEdit} className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Annuler</button>
             <button onClick={onSave} disabled={isPending || !editName.trim()}
-              className="flex-1 py-1.5 text-xs font-medium text-white bg-white0 rounded-lg hover:bg-orange-600 disabled:opacity-50">Enregistrer</button>
+              className="flex-1 py-1.5 text-xs font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">Enregistrer</button>
           </div>
         </div>
       )}
@@ -182,7 +181,7 @@ function SessionDishRow({
   );
 }
 
-export function GuestDishAdder({ sessionId, existingDishes }: Props) {
+export function GuestDishAdder({ existingDishes }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
@@ -245,7 +244,7 @@ export function GuestDishAdder({ sessionId, existingDishes }: Props) {
 
   async function addDish(dish: { name: string; category: string; imageUrl: string }) {
     startTransition(async () => {
-      const result = await addDishAsMemberAction(sessionId, dish);
+      const result = await addDishAsMemberAction(dish);
       if (result?.error) showFeedback(result.error, 3000);
       else { showFeedback(`✓ "${dish.name}" ajouté !`); setSearch(""); setIsDrafting(false); setDraftImageUrl(""); router.refresh(); }
     });
@@ -253,7 +252,7 @@ export function GuestDishAdder({ sessionId, existingDishes }: Props) {
 
   async function removeDish(dishId: string) {
     startTransition(async () => {
-      const result = await removeDishAsMemberAction(sessionId, dishId);
+      const result = await removeDishAsMemberAction(dishId);
       if (result?.error) showFeedback(result.error, 3000);
       else {
         if (editingDishId === dishId) { setEditingDishId(null); setEditName(""); setEditImageUrl(""); }
@@ -265,7 +264,7 @@ export function GuestDishAdder({ sessionId, existingDishes }: Props) {
   async function saveEdit() {
     if (!editingDishId) return;
     startTransition(async () => {
-      const result = await updateDishAsMemberAction(sessionId, editingDishId, {
+      const result = await updateDishAsMemberAction(editingDishId, {
         name: editName.trim() || undefined,
         imageUrl: editImageUrl,
       });
@@ -275,7 +274,7 @@ export function GuestDishAdder({ sessionId, existingDishes }: Props) {
   }
 
   return (
-    <div className="w-full pt-4 pb-6">
+    <div className="w-full pb-6">
       {feedback && (
         <div className="mb-3 text-xs text-center py-2 px-3 rounded-lg bg-white text-orange-700 font-medium">
           {feedback}
@@ -302,9 +301,9 @@ export function GuestDishAdder({ sessionId, existingDishes }: Props) {
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Catégorie</label>
                   <div className="flex flex-wrap gap-1.5">
-                    {["Autre", ...PRESET_CATEGORIES].map((cat) => (
+                    {PRESET_CATEGORIES.map((cat) => (
                       <button key={cat} type="button" onClick={() => setDraftCategory(cat)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${draftCategory === cat ? "bg-white0 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${draftCategory === cat ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                         {cat}
                       </button>
                     ))}
@@ -320,7 +319,7 @@ export function GuestDishAdder({ sessionId, existingDishes }: Props) {
                     className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Annuler</button>
                   <button onClick={() => addDish({ name: search.trim(), category: draftCategory, imageUrl: draftImageUrl })}
                     disabled={isPending}
-                    className="flex-1 py-1.5 text-xs font-medium text-white bg-white0 rounded-lg hover:bg-orange-600 disabled:opacity-50">
+                    className="flex-1 py-1.5 text-xs font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">
                     Confirmer l&apos;ajout
                   </button>
                 </div>

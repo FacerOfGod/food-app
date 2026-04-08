@@ -62,6 +62,10 @@ export async function verifyOtpAction(_prevState: unknown, formData: FormData) {
     create: { email, name: result.name },
   });
 
+  if (user.isBanned) {
+    return { error: "Ce compte a été banni." };
+  }
+
   await setUserCookie(user.id);
 
   redirect(redirectTo ?? "/dashboard");

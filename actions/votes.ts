@@ -1,16 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 export async function submitVoteAction(formData: FormData) {
-  const sessionId = formData.get("sessionId") as string;
   const dishId = formData.get("dishId") as string;
   const rating = parseInt(formData.get("rating") as string, 10);
 
-  if (!sessionId || !dishId || isNaN(rating) || rating < 1 || rating > 5) {
+  if (!dishId || isNaN(rating) || rating < 1 || rating > 5) {
     return { error: "Données invalides." };
   }
 
@@ -18,33 +16,25 @@ export async function submitVoteAction(formData: FormData) {
   if (!user) redirect("/");
 
   await prisma.vote.upsert({
-    where: { userId_dishId_sessionId: { userId: user.id, dishId, sessionId } },
+    where: { userId_dishId: { userId: user.id, dishId } },
     update: { rating },
-    create: { userId: user.id, dishId, sessionId, rating },
+    create: { userId: user.id, dishId, rating },
   });
 
-  revalidatePath(`/vote/${sessionId}`);
   return { success: true };
 }
 
-export async function getVotingData(sessionId: string) {
+export async function getVotingData() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  // Ensure user is a member of this session
-  const membership = await prisma.sessionMember.findUnique({
-    where: { sessionId_userId: { sessionId, userId: user.id } },
-  });
-  if (!membership) return null;
-
   const [dishes, userVotes] = await Promise.all([
     prisma.dish.findMany({
-      where: { sessionId },
       include: { proposer: { select: { name: true } } },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     }),
     prisma.vote.findMany({
-      where: { sessionId, userId: user.id },
+      where: { userId: user.id },
       select: { dishId: true, rating: true },
     }),
   ]);
@@ -77,9 +67,7 @@ export async function getPeopleResults(sessionId: string) {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-  });
+  const session = await prisma.session.findUnique({ where: { id: sessionId } });
   if (!session) return null;
 
   const membership = await prisma.sessionMember.findUnique({
@@ -93,7 +81,6 @@ export async function getPeopleResults(sessionId: string) {
       user: {
         include: {
           votes: {
-            where: { sessionId },
             include: { dish: true },
           },
         },
@@ -103,7 +90,6 @@ export async function getPeopleResults(sessionId: string) {
   });
 
   const dishes = await prisma.dish.findMany({
-    where: { sessionId },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
 
@@ -114,9 +100,7 @@ export async function getDishResults(sessionId: string) {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-  });
+  const session = await prisma.session.findUnique({ where: { id: sessionId } });
   if (!session) return null;
 
   const membership = await prisma.sessionMember.findUnique({
@@ -124,17 +108,25 @@ export async function getDishResults(sessionId: string) {
   });
   if (session.hostId !== user.id && !membership) return null;
 
-  const dishes = await prisma.dish.findMany({
+  const members = await prisma.sessionMember.findMany({
     where: { sessionId },
+    select: { userId: true },
+  });
+  const memberIds = members.map((m) => m.userId);
+
+  const dishes = await prisma.dish.findMany({
     include: {
       votes: {
+        where: { userId: { in: memberIds } },
         include: { user: { select: { id: true, name: true } } },
       },
     },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
 
-  const dishStats = dishes.map((dish) => {
+  const votedDishes = dishes.filter((d) => d.votes.length > 0);
+
+  const dishStats = votedDishes.map((dish) => {
     const votes = dish.votes;
     const totalVotes = votes.length;
     const avgRating =
@@ -155,7 +147,6 @@ export async function getDishResults(sessionId: string) {
     };
   });
 
-  // Sort by average rating descending
   dishStats.sort((a, b) => b.avgRating - a.avgRating);
 
   return { session, dishStats, currentUser: user };

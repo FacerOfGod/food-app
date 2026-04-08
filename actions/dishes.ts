@@ -2,22 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, getUserId } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { DISHES_PRESET } from "@/lib/dishes-preset";
 
-export async function seedPresetDishesAction(sessionId: string) {
+export async function seedPresetDishesAction() {
   const user = await getCurrentUser();
   if (!user) return;
 
-  const membership = await prisma.sessionMember.findUnique({
-    where: { sessionId_userId: { sessionId, userId: user.id } },
-  });
-  if (!membership) return;
-
-  const existing = await prisma.dish.findMany({
-    where: { sessionId },
-    select: { name: true },
-  });
+  const existing = await prisma.dish.findMany({ select: { name: true } });
   const existingNames = new Set(existing.map((d) => d.name.toLowerCase()));
 
   const toAdd = DISHES_PRESET.filter((d) => !existingNames.has(d.name.toLowerCase()));
@@ -28,124 +20,87 @@ export async function seedPresetDishesAction(sessionId: string) {
       name: d.name,
       category: d.category || null,
       imageUrl: d.imageUrl || null,
-      sessionId,
       proposerId: user.id,
       order: existing.length + i,
       authorsJson: "[]",
     })),
   });
 
-  revalidatePath(`/host/${sessionId}`);
+  revalidatePath("/dashboard");
 }
 
-async function assertHostAccess(sessionId: string) {
+export async function getAllDishes() {
   const user = await getCurrentUser();
-  if (!user) throw new Error("Non authentifié");
-
-  const session = await prisma.session.findUnique({ where: { id: sessionId } });
-  if (!session || session.hostId !== user.id)
-    throw new Error("Accès refusé");
-
-  return { user, session };
-}
-
-async function assertMemberAccess(sessionId: string) {
-  const user = await getCurrentUser();
-  if (!user) throw new Error("Non authentifié");
-
-  const membership = await prisma.sessionMember.findUnique({
-    where: { sessionId_userId: { sessionId, userId: user.id } },
+  if (!user) return null;
+  return prisma.dish.findMany({
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    select: { id: true, name: true, imageUrl: true, authorsJson: true },
   });
-  if (!membership) throw new Error("Accès refusé");
-
-  return { user };
 }
 
 export async function addDishAsMemberAction(
-  sessionId: string,
   dish: { name: string; category: string; imageUrl: string }
 ) {
-  let currentUser;
-  try {
-    const { user } = await assertMemberAccess(sessionId);
-    currentUser = user;
-  } catch {
-    return { error: "Accès refusé." };
-  }
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
-  // Check for duplicate (case-insensitive)
-  const allDishes = await prisma.dish.findMany({
-    where: { sessionId },
-    select: { name: true },
-  });
+  const allDishes = await prisma.dish.findMany({ select: { name: true } });
   const duplicate = allDishes.some(
     (d) => d.name.toLowerCase() === dish.name.toLowerCase()
   );
-  if (duplicate) return { error: "Ce plat existe déjà dans la session." };
+  if (duplicate) return { error: "Ce plat existe déjà." };
 
-  const count = await prisma.dish.count({ where: { sessionId } });
-  const authorName = currentUser.name ?? currentUser.email;
+  const count = await prisma.dish.count();
+  const authorName = user.name ?? user.email;
   await prisma.dish.create({
     data: {
       name: dish.name,
       category: dish.category || null,
       imageUrl: dish.imageUrl || null,
-      sessionId,
-      proposerId: currentUser.id,
+      proposerId: user.id,
       order: count,
       authorsJson: JSON.stringify([authorName]),
     },
   });
 
-  revalidatePath(`/host/${sessionId}`);
-  revalidatePath(`/vote/${sessionId}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
-export async function removeDishAsMemberAction(sessionId: string, dishId: string) {
-  try {
-    await assertMemberAccess(sessionId);
-  } catch {
-    return { error: "Accès refusé." };
-  }
+export async function removeDishAsMemberAction(dishId: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
-  await prisma.dish.delete({ where: { id: dishId, sessionId } });
+  await prisma.dish.delete({ where: { id: dishId } });
 
-  revalidatePath(`/host/${sessionId}`);
-  revalidatePath(`/vote/${sessionId}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function updateDishAsMemberAction(
-  sessionId: string,
   dishId: string,
   updates: { name?: string; imageUrl?: string }
 ) {
-  let currentUser;
-  try {
-    const { user } = await assertMemberAccess(sessionId);
-    currentUser = user;
-  } catch {
-    return { error: "Accès refusé." };
-  }
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
   const dish = await prisma.dish.findFirst({
-    where: { id: dishId, sessionId },
+    where: { id: dishId },
     select: { authorsJson: true, name: true },
   });
   if (!dish) return { error: "Plat introuvable." };
 
-  // Check for duplicate name if changing name
   if (updates.name && updates.name.toLowerCase() !== dish.name.toLowerCase()) {
-    const allDishes = await prisma.dish.findMany({ where: { sessionId }, select: { id: true, name: true } });
-    const duplicate = allDishes.some(d => d.id !== dishId && d.name.toLowerCase() === updates.name!.toLowerCase());
+    const allDishes = await prisma.dish.findMany({ select: { id: true, name: true } });
+    const duplicate = allDishes.some(
+      (d) => d.id !== dishId && d.name.toLowerCase() === updates.name!.toLowerCase()
+    );
     if (duplicate) return { error: "Ce nom de plat existe déjà." };
   }
 
-  // Append current user to authors list
   let authors: string[] = [];
   try { authors = JSON.parse(dish.authorsJson); } catch { authors = []; }
-  const authorName = currentUser.name ?? currentUser.email;
+  const authorName = user.name ?? user.email;
   if (!authors.includes(authorName)) authors.push(authorName);
 
   await prisma.dish.update({
@@ -157,34 +112,27 @@ export async function updateDishAsMemberAction(
     },
   });
 
-  revalidatePath(`/host/${sessionId}`);
-  revalidatePath(`/vote/${sessionId}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function addDishAction(_prevState: unknown, formData: FormData) {
-  const sessionId = formData.get("sessionId") as string;
   const name = (formData.get("name") as string)?.trim();
   const category = (formData.get("category") as string)?.trim() || null;
   const imageUrl = (formData.get("imageUrl") as string)?.trim() || null;
 
   if (!name) return { error: "Veuillez entrer un nom de plat." };
 
-  let currentUser;
-  try {
-    const { user } = await assertHostAccess(sessionId);
-    currentUser = user;
-  } catch {
-    return { error: "Accès refusé." };
-  }
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
-  const count = await prisma.dish.count({ where: { sessionId } });
+  const count = await prisma.dish.count();
 
   await prisma.dish.create({
-    data: { name, category, imageUrl, sessionId, proposerId: currentUser.id, order: count },
+    data: { name, category, imageUrl, proposerId: user.id, order: count },
   });
 
-  revalidatePath(`/host/${sessionId}/dishes`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -194,80 +142,59 @@ interface DishInput {
   imageUrl: string;
 }
 
-export async function addManyDishesAction(
-  sessionId: string,
-  dishesToAdd: DishInput[]
-) {
-  let currentUser;
-  try {
-    const { user } = await assertHostAccess(sessionId);
-    currentUser = user;
-  } catch {
-    return { error: "Accès refusé." };
-  }
+export async function addManyDishesAction(dishesToAdd: DishInput[]) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
-  const count = await prisma.dish.count({ where: { sessionId } });
+  const count = await prisma.dish.count();
 
   await prisma.dish.createMany({
     data: dishesToAdd.map((d, i) => ({
       name: d.name,
       category: d.category || null,
       imageUrl: d.imageUrl || null,
-      sessionId,
-      proposerId: currentUser.id,
+      proposerId: user.id,
       order: count + i,
     })),
   });
 
-  revalidatePath(`/host/${sessionId}/dishes`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
-export async function removeAllDishesAction(sessionId: string) {
-  try {
-    await assertHostAccess(sessionId);
-  } catch {
-    return { error: "Accès refusé." };
-  }
+export async function removeAllDishesAction() {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
-  await prisma.dish.deleteMany({ where: { sessionId } });
+  await prisma.dish.deleteMany();
 
-  revalidatePath(`/host/${sessionId}/dishes`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function removeDishAction(_prevState: unknown, formData: FormData) {
-  const sessionId = formData.get("sessionId") as string;
   const dishId = formData.get("dishId") as string;
 
-  try {
-    await assertHostAccess(sessionId);
-  } catch {
-    return { error: "Accès refusé." };
-  }
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
 
   await prisma.dish.delete({ where: { id: dishId } });
 
-  revalidatePath(`/host/${sessionId}/dishes`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function getSessionDishes(sessionId: string) {
-  const userId = await getUserId();
-  if (!userId) throw new Error(`getSessionDishes: cookie user_id est vide`);
-
   const user = await getCurrentUser();
-  if (!user) throw new Error(`getSessionDishes: user introuvable en DB pour l'ID cookie = ${userId}`);
+  if (!user) throw new Error("Non authentifié");
 
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-    include: {
-      dishes: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
-    },
+  const session = await prisma.session.findUnique({ where: { id: sessionId } });
+  if (!session) throw new Error(`Session ${sessionId} introuvable`);
+  if (session.hostId !== user.id) throw new Error("Accès refusé");
+
+  const dishes = await prisma.dish.findMany({
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
 
-  if (!session) throw new Error(`getSessionDishes: session ${sessionId} introuvable en DB`);
-  if (session.hostId !== user.id) throw new Error(`getSessionDishes: session.hostId=${session.hostId} !== user.id=${user.id}`);
-
-  return { session, user };
+  return { session, user, dishes };
 }

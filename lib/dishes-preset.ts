@@ -644,5 +644,6 @@ export const DISHES_PRESET: DishPreset[] = [
 ];
 
 export const PRESET_CATEGORIES = [
+  "Autre",
   ...new Set(DISHES_PRESET.map((d) => d.category)),
 ];

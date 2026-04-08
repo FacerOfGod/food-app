@@ -35,7 +35,7 @@ export default async function JoinPage({ params }: Props) {
   const user = await getCurrentUser();
   if (user) {
     await joinSessionAction(sessionId);
-    redirect(`/host/${sessionId}?view=vote`);
+    redirect(`/dashboard?view=vote&session=${sessionId}`);
   }
 
   const redirectTo = `/join/${sessionId}`;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,7 +28,6 @@ interface UserVote {
 }
 
 interface Props {
-  sessionId: string;
   nextDish: Dish | null;
   dishes: Dish[];
   userVotes: UserVote[];
@@ -39,7 +38,6 @@ interface Props {
 }
 
 export function VotingInterface({
-  sessionId,
   nextDish,
   dishes,
   userVotes,
@@ -52,10 +50,24 @@ export function VotingInterface({
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [isExiting, setIsExiting] = useState(false);
+  const [isEntering, setIsEntering] = useState(false);
+  const lastDishId = useRef(nextDish?.id);
+
   // For review mode: which dish is being edited
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [visibleCount, setVisibleCount] = useState(20);
+
+  // Trigger enter animation when the dish changes
+  useEffect(() => {
+    if (viewMode !== "vote") return;
+    if (nextDish?.id !== lastDishId.current) {
+      lastDishId.current = nextDish?.id ?? undefined;
+      setIsEntering(true);
+      const t = setTimeout(() => setIsEntering(false), 20);
+      return () => clearTimeout(t);
+    }
+  }, [nextDish?.id, viewMode]);
 
   const voteMap = new Map(userVotes.map((v) => [v.dishId, v.rating]));
   const progress = Math.round((votedCount / totalDishes) * 100);
@@ -69,17 +81,22 @@ export function VotingInterface({
   );
 
   async function vote(dishId: string, rating: number) {
-    if (isPending) return;
+    if (isPending || isExiting) return;
     setSelected(rating);
 
+    if (viewMode === "vote") setIsExiting(true);
+
     const formData = new FormData();
-    formData.set("sessionId", sessionId);
     formData.set("dishId", dishId);
     formData.set("rating", rating.toString());
 
-    const result = await submitVoteAction(formData);
-    if (result?.error) { setSelected(null); return; }
+    const [result] = await Promise.all([
+      submitVoteAction(formData),
+      viewMode === "vote" ? new Promise(r => setTimeout(r, 220)) : Promise.resolve(),
+    ]);
+    if (result?.error) { setSelected(null); setIsExiting(false); return; }
 
+    setIsExiting(false);
     startTransition(() => {
       router.refresh();
       setSelected(null);
@@ -94,7 +111,7 @@ export function VotingInterface({
 
 
       {viewMode === "mes-choix" ? (
-        <div className="max-w-lg mx-auto w-full px-4 py-6">
+        <div className="w-full pb-4">
           {nextDish === null && (
             <div className="text-center mb-6">
               <div className="text-4xl mb-2">🎉</div>
@@ -170,24 +187,26 @@ export function VotingInterface({
                   </button>
 
                   {/* Inline rating picker */}
-                  {isEditing && (
-                    <div className="relative flex items-start border-t border-gray-100 px-2 pt-3 pb-2">
-                      <div className="absolute left-[calc(10%)] right-[calc(10%)] top-[1.65rem] h-px bg-gray-300" />
-                      {RATINGS.map((r) => (
-                        <button
-                          key={r.value}
-                          onClick={() => vote(dish.id, r.value)}
-                          disabled={isPending}
-                          className="flex-1 flex flex-col items-center gap-1.5 relative disabled:cursor-not-allowed group"
-                        >
-                          <span className={`w-3 h-3 rounded-full border-2 border-white ring-1 ring-gray-300 transition-all ${r.dot}
-                            ${rating === r.value ? "scale-125 ring-0" : "opacity-50 group-hover:opacity-100"}`}
-                          />
-                          <span className="text-[9px] font-medium text-gray-500 leading-tight text-center">{r.label}</span>
-                        </button>
-                      ))}
+                  <div className={`grid transition-all duration-200 ease-out ${isEditing ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                    <div className="overflow-hidden">
+                      <div className="relative flex items-start border-t border-gray-100 px-2 pt-3 pb-2">
+                        <div className="absolute left-[calc(10%)] right-[calc(10%)] top-[1.65rem] h-px bg-gray-300" />
+                        {RATINGS.map((r) => (
+                          <button
+                            key={r.value}
+                            onClick={() => vote(dish.id, r.value)}
+                            disabled={isPending}
+                            className="flex-1 flex flex-col items-center gap-1.5 relative disabled:cursor-not-allowed group"
+                          >
+                            <span className={`w-3 h-3 rounded-full border-2 border-white ring-1 ring-gray-300 transition-all ${r.dot}
+                              ${rating === r.value ? "scale-125 ring-0" : "opacity-50 group-hover:opacity-100"}`}
+                            />
+                            <span className="text-[9px] font-medium text-gray-500 leading-tight text-center">{r.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
@@ -211,51 +230,58 @@ export function VotingInterface({
       ) : (
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         <div className="w-full max-w-sm">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
-            <div className="relative w-full h-52 bg-gray-100">
-              {nextDish.imageUrl ? (
-                <Image
-                  src={nextDish.imageUrl}
-                  alt={nextDish.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, 384px"
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-5xl">
-                  🍴
-                </div>
-              )}
+          {/* Animated card + rating buttons */}
+          <div className={`transition-all duration-200 ease-in-out ${
+            isExiting ? "opacity-0 -translate-y-4 scale-95" :
+            isEntering ? "opacity-0 translate-y-4" :
+            "opacity-100 translate-y-0 scale-100"
+          }`}>
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-5">
+              <div className="relative w-full h-52 bg-gray-100">
+                {nextDish.imageUrl ? (
+                  <Image
+                    src={nextDish.imageUrl}
+                    alt={nextDish.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 384px"
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-5xl">
+                    🍴
+                  </div>
+                )}
+              </div>
+              <div className="px-5 py-4 text-center">
+                {(nextDish.category || nextDish.proposer?.name) && (
+                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">
+                    {[nextDish.category, nextDish.proposer?.name ? `par ${nextDish.proposer.name}` : ""].filter(Boolean).join(" • ")}
+                  </p>
+                )}
+                <h2 className="text-xl font-bold text-gray-900">{nextDish.name}</h2>
+              </div>
             </div>
-            <div className="px-5 py-4 text-center">
-              {(nextDish.category || nextDish.proposer?.name) && (
-                <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 truncate">
-                  {[nextDish.category, nextDish.proposer?.name ? `par ${nextDish.proposer.name}` : ""].filter(Boolean).join(" • ")}
-                </p>
-              )}
-              <h2 className="text-xl font-bold text-gray-900">{nextDish.name}</h2>
+
+            <div className="relative flex items-start w-full px-2 pt-2 pb-1">
+              <div className="absolute left-[calc(10%)] right-[calc(10%)] top-[1.15rem] h-px bg-gray-300" />
+              {RATINGS.map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => vote(nextDish.id, r.value)}
+                  disabled={isPending}
+                  className="flex-1 flex flex-col items-center gap-2 relative disabled:cursor-not-allowed group"
+                >
+                  <span className={`w-4 h-4 rounded-full border-2 border-white ring-1 ring-gray-300 transition-all ${r.dot}
+                    ${selected === r.value ? "scale-125 ring-0" : "opacity-50 group-hover:opacity-100"}`}
+                  />
+                  <span className="text-[9px] font-medium text-gray-500 leading-tight text-center">{r.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="relative flex items-start w-full px-2 pt-2 pb-1">
-            {/* horizontal connecting line */}
-            <div className="absolute left-[calc(10%)] right-[calc(10%)] top-[1.15rem] h-px bg-gray-300" />
-            {RATINGS.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => vote(nextDish.id, r.value)}
-                disabled={isPending}
-                className="flex-1 flex flex-col items-center gap-2 relative disabled:cursor-not-allowed group"
-              >
-                <span className={`w-4 h-4 rounded-full border-2 border-white ring-1 ring-gray-300 transition-all ${r.dot}
-                  ${selected === r.value ? "scale-125 ring-0" : "opacity-50 group-hover:opacity-100"}`}
-                />
-                <span className="text-[9px] font-medium text-gray-500 leading-tight text-center">{r.label}</span>
-              </button>
-            ))}
-          </div>
-
+          {/* Counter stays fixed */}
           <div className="text-center mt-6 space-y-1">
             <p className="text-sm font-medium text-orange-600">
               {remaining} plat{remaining > 1 ? "s" : ""} restant{remaining > 1 ? "s" : ""}

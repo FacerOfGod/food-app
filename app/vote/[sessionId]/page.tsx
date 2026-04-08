@@ -6,5 +6,5 @@ interface Props {
 
 export default async function VotePage({ params }: Props) {
   const { sessionId } = await params;
-  redirect(`/host/${sessionId}?view=vote`);
+  redirect(`/dashboard?view=vote&session=${sessionId}`);
 }

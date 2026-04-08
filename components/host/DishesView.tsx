@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface User {
   id: string;
@@ -28,9 +29,15 @@ export function DishesView({ dishStats }: Props) {
 
   if (dishStats.length === 0) {
     return (
-      <p className="text-center text-sm text-gray-400 py-8">
-        Aucun plat dans cette session.
-      </p>
+      <div className="text-center py-8">
+        <p className="text-sm text-gray-400 mb-2">Aucun vote pour cette session.</p>
+        <Link
+          href="/dashboard?view=vote"
+          className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors"
+        >
+          Voter sur les plats !
+        </Link>
+      </div>
     );
   }
 

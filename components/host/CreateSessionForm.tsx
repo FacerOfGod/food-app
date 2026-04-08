@@ -17,7 +17,7 @@ export function CreateSessionForm() {
         name="name"
         type="text"
         required
-        placeholder="Ex: Dîner de Noël"
+        placeholder="Ex: Famille, Ami de Lausanne, collègue, etc."
         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
       />
       <button

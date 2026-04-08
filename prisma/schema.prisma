@@ -11,6 +11,7 @@ model User {
   id             String          @id @default(cuid())
   email          String          @unique
   name           String?
+  isBanned       Boolean         @default(false)
   createdAt      DateTime        @default(now())
   hostedSessions Session[]       @relation("HostedSessions")
   memberships    SessionMember[]
@@ -35,8 +36,6 @@ model Session {
   host      User            @relation("HostedSessions", fields: [hostId], references: [id])
   createdAt DateTime        @default(now())
   members   SessionMember[]
-  dishes    Dish[]
-  votes     Vote[]
 }
 
 model SessionMember {
@@ -51,14 +50,12 @@ model SessionMember {
 }
 
 model Dish {
-  id        String   @id @default(cuid())
-  name      String
-  category  String?
-  imageUrl  String?
-  sessionId  String
-  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  proposerId String?
-  proposer   User?    @relation("ProposedDishes", fields: [proposerId], references: [id])
+  id          String   @id @default(cuid())
+  name        String
+  category    String?
+  imageUrl    String?
+  proposerId  String?
+  proposer    User?    @relation("ProposedDishes", fields: [proposerId], references: [id])
   order       Int      @default(0)
   authorsJson String   @default("[]")
   votes       Vote[]
@@ -71,10 +68,8 @@ model Vote {
   user      User     @relation(fields: [userId], references: [id])
   dishId    String
   dish      Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  sessionId String
-  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   rating    Int
   createdAt DateTime @default(now())
 
-  @@unique([userId, dishId, sessionId])
+  @@unique([userId, dishId])
 }

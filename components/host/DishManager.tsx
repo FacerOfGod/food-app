@@ -66,13 +66,13 @@ export function DishManager({ sessionId, dishes }: Props) {
     );
     if (toAdd.length === 0) return;
     startTransition(async () => {
-      await addManyDishesAction(sessionId, toAdd);
+      await addManyDishesAction(toAdd);
     });
   }
 
   function removeAll() {
     startTransition(async () => {
-      await removeAllDishesAction(sessionId);
+      await removeAllDishesAction();
     });
   }
 
