@@ -2,13 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
+import { m, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import {
   addDishAction,
   addManyDishesAction,
   removeDishAction,
   removeAllDishesAction,
 } from "@/actions/dishes";
-import { DISHES_PRESET, PRESET_CATEGORIES } from "@/lib/dishes-preset";
+import { DISHES_PRESET, PRESET_CATEGORIES } from "@/lib/presets";
 
 interface Dish {
   id: string;
@@ -34,8 +36,7 @@ export function DishManager({ sessionId, dishes }: Props) {
     const matchSearch =
       d.name.toLowerCase().includes(search.toLowerCase()) ||
       d.category.toLowerCase().includes(search.toLowerCase());
-    const matchCat =
-      activeCategory === "Tous" || d.category === activeCategory;
+    const matchCat = activeCategory === "Tous" || d.category === activeCategory;
     return matchSearch && matchCat;
   });
 
@@ -46,39 +47,27 @@ export function DishManager({ sessionId, dishes }: Props) {
     fd.set("name", dish.name);
     fd.set("category", dish.category);
     fd.set("imageUrl", dish.imageUrl);
-    startTransition(async () => {
-      await addDishAction(null, fd);
-    });
+    startTransition(async () => { await addDishAction(null, fd); });
   }
 
   async function removeDish(dishId: string) {
     const fd = new FormData();
     fd.set("sessionId", sessionId);
     fd.set("dishId", dishId);
-    startTransition(async () => {
-      await removeDishAction(null, fd);
-    });
+    startTransition(async () => { await removeDishAction(null, fd); });
   }
 
   function selectAllVisible() {
-    const toAdd = filtered.filter(
-      (d) => !sessionDishNames.has(d.name.toLowerCase())
-    );
+    const toAdd = filtered.filter((d) => !sessionDishNames.has(d.name.toLowerCase()));
     if (toAdd.length === 0) return;
-    startTransition(async () => {
-      await addManyDishesAction(toAdd);
-    });
+    startTransition(async () => { await addManyDishesAction(toAdd); });
   }
 
   function removeAll() {
-    startTransition(async () => {
-      await removeAllDishesAction();
-    });
+    startTransition(async () => { await removeAllDishesAction(); });
   }
 
-  const unadded = filtered.filter(
-    (d) => !sessionDishNames.has(d.name.toLowerCase())
-  ).length;
+  const unadded = filtered.filter((d) => !sessionDishNames.has(d.name.toLowerCase())).length;
 
   return (
     <div className="space-y-6">
@@ -86,8 +75,7 @@ export function DishManager({ sessionId, dishes }: Props) {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-700">
-            Plats sélectionnés{" "}
-            <span className="text-orange-500 font-bold">({dishes.length})</span>
+            Plats sélectionnés <span className="text-orange-500 font-bold">({dishes.length})</span>
           </h2>
           {dishes.length > 0 && (
             <button
@@ -101,58 +89,59 @@ export function DishManager({ sessionId, dishes }: Props) {
         </div>
 
         {dishes.length === 0 ? (
-          <p className="text-xs text-gray-400 bg-gray-50 rounded-lg p-4 text-center">
+          <p className="text-xs text-gray-400 bg-gray-50 rounded-xl p-4 text-center">
             Aucun plat sélectionné. Choisissez dans le catalogue ci-dessous.
           </p>
         ) : (
           <div className="relative">
             <button
               onClick={() => setShowSelected(!showSelected)}
-              className="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400/40"
             >
               <span>🍽️ Consulter la sélection ({dishes.length})</span>
-              <span className={`text-gray-400 transition-transform ${showSelected ? "rotate-180" : ""}`}>
-                ▼
-              </span>
+              <m.span
+                animate={{ rotate: showSelected ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-gray-400"
+              >
+                <ChevronDown size={16} />
+              </m.span>
             </button>
-            
-            {showSelected && (
-              <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                <div className="p-2 space-y-1">
-                  {dishes.map((dish) => (
-                    <div
-                      key={dish.id}
-                      className="flex items-center justify-between bg-gray-50 hover:bg-orange-50 border border-transparent hover:border-orange-200 rounded-lg p-2 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {dish.imageUrl && (
-                          <div className="relative w-8 h-8 rounded-md overflow-hidden flex-shrink-0">
-                            <Image
-                              src={dish.imageUrl}
-                              alt={dish.name}
-                              fill
-                              sizes="32px"
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <span className="text-sm font-medium text-gray-900">
-                          {dish.name}
-                        </span>
+
+            <AnimatePresence>
+              {showSelected && (
+                <m.div
+                  initial={{ opacity: 0, y: -8, scaleY: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                  exit={{ opacity: 0, y: -8, scaleY: 0.97 }}
+                  transition={{ duration: 0.18 }}
+                  className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)] max-h-64 overflow-y-auto"
+                >
+                  <div className="p-2 space-y-1">
+                    {dishes.map((dish) => (
+                      <div key={dish.id} className="flex items-center justify-between bg-gray-50 hover:bg-orange-50 border border-transparent hover:border-orange-200 rounded-lg p-2 transition-colors">
+                        <div className="flex items-center gap-3">
+                          {dish.imageUrl && (
+                            <div className="relative w-8 h-8 rounded-md overflow-hidden flex-shrink-0">
+                              <Image src={dish.imageUrl} alt={dish.name} fill sizes="32px" className="object-cover" />
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-gray-900">{dish.name}</span>
+                        </div>
+                        <button
+                          onClick={() => removeDish(dish.id)}
+                          disabled={isPending}
+                          className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full w-7 h-7 flex items-center justify-center transition-colors disabled:opacity-50"
+                          aria-label={`Retirer ${dish.name}`}
+                        >
+                          ✕
+                        </button>
                       </div>
-                      <button
-                        onClick={() => removeDish(dish.id)}
-                        disabled={isPending}
-                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full w-7 h-7 flex items-center justify-center transition-colors disabled:opacity-50"
-                        aria-label={`Retirer ${dish.name}`}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    ))}
+                  </div>
+                </m.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>
@@ -160,9 +149,7 @@ export function DishManager({ sessionId, dishes }: Props) {
       {/* Catalog */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700">
-            Catalogue de plats
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-700">Catalogue de plats</h2>
           {unadded > 0 && (
             <button
               onClick={selectAllVisible}
@@ -174,21 +161,20 @@ export function DishManager({ sessionId, dishes }: Props) {
           )}
         </div>
 
-        {/* Search */}
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher un plat…"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white"
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 bg-white transition-all"
         />
 
-        {/* Category filter */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
           {["Tous", ...PRESET_CATEGORIES].map((cat) => (
-            <button
+            <m.button
               key={cat}
               onClick={() => setActiveCategory(cat)}
+              whileTap={{ scale: 0.92 }}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 activeCategory === cat
                   ? "bg-orange-500 text-white"
@@ -196,24 +182,25 @@ export function DishManager({ sessionId, dishes }: Props) {
               }`}
             >
               {cat}
-            </button>
+            </m.button>
           ))}
         </div>
 
-        {/* Dish grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {filtered.map((dish) => {
             const isAdded = sessionDishNames.has(dish.name.toLowerCase());
             return (
-              <button
+              <m.button
                 key={dish.name}
                 onClick={() => addPreset(dish)}
                 disabled={isAdded || isPending}
-                className={`relative rounded-xl overflow-hidden border-2 transition-all text-left group
+                whileHover={!isAdded ? { y: -2, boxShadow: "0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" } : {}}
+                transition={{ duration: 0.15 }}
+                className={`relative rounded-xl overflow-hidden border-2 transition-all text-left
                   ${
                     isAdded
                       ? "border-orange-400 opacity-60 cursor-default"
-                      : "border-transparent hover:border-orange-300 hover:shadow-md cursor-pointer"
+                      : "border-transparent hover:border-orange-300 cursor-pointer"
                   }`}
               >
                 <div className="relative h-24 w-full bg-gray-100">
@@ -224,21 +211,24 @@ export function DishManager({ sessionId, dishes }: Props) {
                     sizes="(max-width: 640px) 50vw, 33vw"
                     className="object-cover"
                   />
-                  {isAdded && (
-                    <div className="absolute inset-0 bg-orange-500/30 flex items-center justify-center">
-                      <span className="text-white text-xl font-bold">✓</span>
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {isAdded && (
+                      <m.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="absolute inset-0 bg-orange-500/30 flex items-center justify-center"
+                      >
+                        <span className="text-white text-xl font-bold">✓</span>
+                      </m.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <div className="bg-white px-2 py-1.5">
-                  <p className="text-xs font-semibold text-gray-800 truncate">
-                    {dish.name}
-                  </p>
-                  <p className="text-[10px] text-gray-400 truncate">
-                    {dish.category}
-                  </p>
+                  <p className="text-xs font-semibold text-gray-800 truncate">{dish.name}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{dish.category}</p>
                 </div>
-              </button>
+              </m.button>
             );
           })}
         </div>

@@ -5,21 +5,28 @@ import { PeopleView } from "@/components/host/PeopleView";
 import { DishesView } from "@/components/host/DishesView";
 import { CopyButton } from "@/components/host/CopyButton";
 import { TabBar } from "@/components/host/TabBar";
+import { TopicTabBar } from "@/components/ui/TopicTabBar";
 import { logoutAction } from "@/actions/auth";
+import { type TopicKey } from "@/lib/presets";
 
 interface Props {
   params: Promise<{ sessionId: string }>;
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; topic?: string }>;
 }
+
+const VALID_TOPICS: TopicKey[] = ["food", "movies", "activities"];
 
 export default async function HostDashboardPage({ params, searchParams }: Props) {
   const { sessionId } = await params;
-  const { view } = await searchParams;
+  const { view, topic: rawTopic } = await searchParams;
   const activeView = view === "dishes" ? "dishes" : "people";
+  const topic: TopicKey = VALID_TOPICS.includes(rawTopic as TopicKey)
+    ? (rawTopic as TopicKey)
+    : "food";
 
   const [peopleData, dishData] = await Promise.all([
-    getPeopleResults(sessionId),
-    getDishResults(sessionId),
+    getPeopleResults(sessionId, topic),
+    getDishResults(sessionId, topic),
   ]);
 
   if (!peopleData || !dishData) redirect("/dashboard");
@@ -30,7 +37,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
   return (
     <main className="min-h-screen bg-[#fafaf9]">
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_0_#e4e4e7] px-4 py-3 flex items-center">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm flex-shrink-0">
             ←
@@ -54,13 +61,15 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
 
       <div className="max-w-3xl mx-auto px-4">
         <div className="pt-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 flex items-start gap-2">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 flex items-start gap-2 mb-4">
             <span className="flex-shrink-0 w-4 h-4 rounded-full border border-gray-400 text-gray-400 text-[10px] font-bold flex items-center justify-center mt-0.5">i</span>
             <span>
-              {activeView === "people" && "Voir qui a rejoint la session et combien de plats chacun a votés."}
-              {activeView === "dishes" && "Classement des plats selon les votes de tous les participants."}
+              {activeView === "people" && "Voir qui a rejoint le groupe et combien d'éléments chacun a votés."}
+              {activeView === "dishes" && "Classement par thème selon les votes de tous les participants."}
             </span>
           </div>
+
+          <TopicTabBar currentTopic={topic} />
         </div>
 
         {activeView === "people" ? (

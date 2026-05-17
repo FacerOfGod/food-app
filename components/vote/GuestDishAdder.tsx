@@ -3,8 +3,10 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { m, AnimatePresence } from "framer-motion";
 import { addDishAsMemberAction, updateDishAsMemberAction, removeDishAsMemberAction } from "@/actions/dishes";
-import { PRESET_CATEGORIES } from "@/lib/dishes-preset";
+import { TOPIC_CONFIG, getCategoriesForTopic, type TopicKey } from "@/lib/presets";
+import { listContainerVariants, listItemVariants, scaleInVariants } from "@/components/motion/variants";
 
 type UnsplashPhoto = { thumb: string; url: string; alt: string };
 
@@ -17,6 +19,7 @@ interface ExistingDish {
 
 interface Props {
   existingDishes: ExistingDish[];
+  topic?: TopicKey;
 }
 
 function normalizeImageUrl(url: string): string {
@@ -94,14 +97,14 @@ function PhotoPicker({
       )}
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-          className="flex-shrink-0 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-orange-700 hover:bg-white disabled:opacity-50 transition-colors">
+          className="flex-shrink-0 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-orange-700 hover:bg-orange-50 disabled:opacity-50 transition-colors">
           {uploading ? "…" : "📎 Fichier"}
         </button>
         <input type="text" value={imageUrl.startsWith("data:") ? "" : imageUrl}
           onChange={(e) => onChange(e.target.value)}
           onBlur={(e) => onChange(normalizeImageUrl(e.target.value))}
           placeholder="Coller une URL…"
-          className="flex-1 min-w-0 px-2 py-1.5 text-xs rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="flex-1 min-w-0 px-2 py-1.5 text-xs rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400/40"
         />
         {imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -130,7 +133,10 @@ function SessionDishRow({
   const thumb = isEditing ? editImageUrl : (dish.imageUrl ?? "");
 
   return (
-    <div className={`rounded-xl border overflow-hidden transition-colors ${isEditing ? "border-gray-400" : "border-gray-200"}`}>
+    <m.div
+      variants={listItemVariants}
+      className={`rounded-xl border overflow-hidden transition-colors ${isEditing ? "border-orange-300" : "border-gray-200"}`}
+    >
       <div className="flex items-center bg-white">
         <button onClick={onToggleEdit}
           className="flex-1 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left px-3 py-2 min-w-0">
@@ -152,50 +158,62 @@ function SessionDishRow({
           </div>
           <span className="text-gray-400 text-xs font-medium flex-shrink-0 mr-2">{isEditing ? "✕" : "Éditer"}</span>
         </button>
-        <button onClick={onDelete} disabled={isPending}
-          className="flex-shrink-0 px-3 self-stretch flex items-center text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50">
+        <m.button
+          onClick={onDelete}
+          disabled={isPending}
+          whileTap={{ scale: 0.88 }}
+          className="flex-shrink-0 px-3 self-stretch flex items-center text-gray-400 hover:text-red-400 transition-colors disabled:opacity-50"
+        >
           🗑
-        </button>
+        </m.button>
       </div>
 
-      {isEditing && (
-        <div className="px-4 py-3 bg-white border-t border-orange-100 space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Nom</label>
-            <input type="text" value={editName} onChange={(e) => onChangeName(e.target.value)}
-              className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">Photo</label>
-            <PhotoPicker imageUrl={editImageUrl} onChange={onChangeImage}
-              unsplashPhotos={editUnsplashPhotos} unsplashLoading={editUnsplashLoading} />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button onClick={onToggleEdit} className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Annuler</button>
-            <button onClick={onSave} disabled={isPending || !editName.trim()}
-              className="flex-1 py-1.5 text-xs font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">Enregistrer</button>
-          </div>
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {isEditing && (
+          <m.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 py-3 bg-white border-t border-orange-100 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Nom</label>
+                <input type="text" value={editName} onChange={(e) => onChangeName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-2">Photo</label>
+                <PhotoPicker imageUrl={editImageUrl} onChange={onChangeImage}
+                  unsplashPhotos={editUnsplashPhotos} unsplashLoading={editUnsplashLoading} />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button onClick={onToggleEdit} className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Annuler</button>
+                <button onClick={onSave} disabled={isPending || !editName.trim()}
+                  className="flex-1 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition-all">Enregistrer</button>
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </m.div>
   );
 }
 
-export function GuestDishAdder({ existingDishes }: Props) {
+export function GuestDishAdder({ existingDishes, topic = "food" }: Props) {
+  const topicCfg = TOPIC_CONFIG[topic];
+  const categories = getCategoriesForTopic(topic);
   const router = useRouter();
   const [search, setSearch] = useState("");
-
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
-
   const [visibleCount, setVisibleCount] = useState(20);
-
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftCategory, setDraftCategory] = useState("Autre");
   const [draftImageUrl, setDraftImageUrl] = useState("");
   const [draftUnsplashPhotos, setDraftUnsplashPhotos] = useState<UnsplashPhoto[]>([]);
   const [draftUnsplashLoading, setDraftUnsplashLoading] = useState(false);
-
   const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
@@ -218,16 +236,10 @@ export function GuestDishAdder({ existingDishes }: Props) {
       .finally(() => setEditUnsplashLoading(false));
   }, [editingDishId, editName]);
 
-  const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const normalize = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const q = normalize(search);
-
   const existingNames = new Set(existingDishes.map((d) => d.name.toLowerCase()));
-
-  const filtered = existingDishes.filter((d) => {
-    if (!search.trim()) return true;
-    return normalize(d.name).includes(q);
-  });
-
+  const filtered = existingDishes.filter((d) => !search.trim() || normalize(d.name).includes(q));
   const isNewCustom = search.trim() !== "" && !existingNames.has(search.trim().toLowerCase());
 
   function toggleEdit(dish: ExistingDish) {
@@ -244,7 +256,7 @@ export function GuestDishAdder({ existingDishes }: Props) {
 
   async function addDish(dish: { name: string; category: string; imageUrl: string }) {
     startTransition(async () => {
-      const result = await addDishAsMemberAction(dish);
+      const result = await addDishAsMemberAction({ ...dish, topic });
       if (result?.error) showFeedback(result.error, 3000);
       else { showFeedback(`✓ "${dish.name}" ajouté !`); setSearch(""); setIsDrafting(false); setDraftImageUrl(""); router.refresh(); }
     });
@@ -275,81 +287,119 @@ export function GuestDishAdder({ existingDishes }: Props) {
 
   return (
     <div className="w-full pb-6">
-      {feedback && (
-        <div className="mb-3 text-xs text-center py-2 px-3 rounded-lg bg-white text-orange-700 font-medium">
-          {feedback}
-        </div>
-      )}
+      {/* Animated feedback toast */}
+      <AnimatePresence>
+        {feedback && (
+          <m.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+            className="mb-3 text-xs text-center py-2 px-3 rounded-xl bg-white border border-orange-100 text-orange-700 font-medium shadow-sm"
+          >
+            {feedback}
+          </m.div>
+        )}
+      </AnimatePresence>
 
       <input
         type="text" value={search}
         onChange={(e) => { setSearch(e.target.value); setIsDrafting(false); setVisibleCount(20); }}
-        placeholder="Filtrer ou ajouter un plat…"
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white mb-3"
+        placeholder={topicCfg.addPlaceholder}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 bg-white mb-3 transition-all"
       />
-
 
       <div className="space-y-2">
         {/* Add custom dish */}
-        {isNewCustom && (
-          isDrafting ? (
-            <div className="rounded-xl border border-gray-300 overflow-hidden mb-2">
-              <div className="px-4 py-3 bg-white border-b border-gray-200">
-                <p className="text-sm font-semibold text-orange-900">Nouveau plat : &quot;{search.trim()}&quot;</p>
-              </div>
-              <div className="px-4 py-3 bg-white space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Catégorie</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {PRESET_CATEGORIES.map((cat) => (
-                      <button key={cat} type="button" onClick={() => setDraftCategory(cat)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${draftCategory === cat ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-                        {cat}
-                      </button>
-                    ))}
+        <AnimatePresence mode="wait">
+          {isNewCustom && (
+            isDrafting ? (
+              <m.div
+                key="draft-form"
+                variants={scaleInVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="rounded-2xl border border-orange-200 overflow-hidden mb-2 bg-white shadow-sm"
+              >
+                <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
+                  <p className="text-sm font-semibold text-orange-900">Nouveau{topicCfg.itemLabelFem ? "lle" : ""} {topicCfg.itemLabel} : &quot;{search.trim()}&quot;</p>
+                </div>
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Catégorie</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {categories.map((cat) => (
+                        <m.button
+                          key={cat}
+                          type="button"
+                          onClick={() => setDraftCategory(cat)}
+                          whileTap={{ scale: 0.92 }}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${draftCategory === cat ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                        >
+                          {cat}
+                        </m.button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">Photo</label>
+                    <PhotoPicker imageUrl={draftImageUrl} onChange={setDraftImageUrl}
+                      unsplashPhotos={draftUnsplashPhotos} unsplashLoading={draftUnsplashLoading} />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => { setIsDrafting(false); setDraftImageUrl(""); setDraftCategory("Autre"); }}
+                      className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Annuler</button>
+                    <button onClick={() => addDish({ name: search.trim(), category: draftCategory, imageUrl: draftImageUrl })}
+                      disabled={isPending}
+                      className="flex-1 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition-all">
+                      Confirmer l&apos;ajout
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-2">Photo</label>
-                  <PhotoPicker imageUrl={draftImageUrl} onChange={setDraftImageUrl}
-                    unsplashPhotos={draftUnsplashPhotos} unsplashLoading={draftUnsplashLoading} />
+              </m.div>
+            ) : (
+              <m.button
+                key="add-button"
+                variants={scaleInVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setIsDrafting(true)}
+                disabled={isPending}
+                whileHover={{ borderColor: "#e85d04" }}
+                className="w-full flex items-center gap-3 rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/50 hover:bg-orange-50 transition-all text-left px-3 py-2"
+              >
+                <div className="w-12 h-12 rounded-xl bg-orange-200 flex items-center justify-center flex-shrink-0 text-orange-600 font-bold text-xl">+</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-orange-900">Ajouter &quot;{search.trim()}&quot;</p>
+                  <p className="text-xs text-orange-500">Nouveau{topicCfg.itemLabelFem ? "lle" : ""} {topicCfg.itemLabel} personnalisé{topicCfg.itemLabelFem ? "e" : ""}</p>
                 </div>
-                <div className="flex gap-2 pt-1">
-                  <button onClick={() => { setIsDrafting(false); setDraftImageUrl(""); setDraftCategory("Autre"); }}
-                    className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Annuler</button>
-                  <button onClick={() => addDish({ name: search.trim(), category: draftCategory, imageUrl: draftImageUrl })}
-                    disabled={isPending}
-                    className="flex-1 py-1.5 text-xs font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">
-                    Confirmer l&apos;ajout
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <button onClick={() => setIsDrafting(true)} disabled={isPending}
-              className="w-full flex items-center gap-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition-all text-left px-3 py-2">
-              <div className="w-12 h-12 rounded-lg bg-orange-200 flex items-center justify-center flex-shrink-0 text-orange-600 font-bold text-xl">+</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-orange-900">Ajouter &quot;{search.trim()}&quot;</p>
-                <p className="text-xs text-orange-600">Nouveau plat personnalisé</p>
-              </div>
-            </button>
-          )
-        )}
+              </m.button>
+            )
+          )}
+        </AnimatePresence>
 
-        {/* All session dishes — all orange */}
-        {filtered.slice(0, visibleCount).map((dish) => (
-          <SessionDishRow
-            key={dish.id} dish={dish}
-            isEditing={editingDishId === dish.id}
-            editName={editName} editImageUrl={editImageUrl}
-            editUnsplashPhotos={editUnsplashPhotos} editUnsplashLoading={editUnsplashLoading}
-            isPending={isPending}
-            onToggleEdit={() => toggleEdit(dish)}
-            onChangeName={setEditName} onChangeImage={setEditImageUrl}
-            onSave={saveEdit} onDelete={() => removeDish(dish.id)}
-          />
-        ))}
+        {/* Dish list with stagger */}
+        <m.div
+          className="space-y-2"
+          variants={listContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {filtered.slice(0, visibleCount).map((dish) => (
+            <SessionDishRow
+              key={dish.id} dish={dish}
+              isEditing={editingDishId === dish.id}
+              editName={editName} editImageUrl={editImageUrl}
+              editUnsplashPhotos={editUnsplashPhotos} editUnsplashLoading={editUnsplashLoading}
+              isPending={isPending}
+              onToggleEdit={() => toggleEdit(dish)}
+              onChangeName={setEditName} onChangeImage={setEditImageUrl}
+              onSave={saveEdit} onDelete={() => removeDish(dish.id)}
+            />
+          ))}
+        </m.div>
 
         {filtered.length > visibleCount && (
           <button

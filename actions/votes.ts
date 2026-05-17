@@ -24,12 +24,13 @@ export async function submitVoteAction(formData: FormData) {
   return { success: true };
 }
 
-export async function getVotingData() {
+export async function getVotingData(topic: string = "food") {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const [dishes, userVotes] = await Promise.all([
+  const [dishes, allUserVotes] = await Promise.all([
     prisma.dish.findMany({
+      where: { topic },
       include: { proposer: { select: { name: true } } },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     }),
@@ -39,6 +40,8 @@ export async function getVotingData() {
     }),
   ]);
 
+  const dishIds = new Set(dishes.map((d) => d.id));
+  const userVotes = allUserVotes.filter((v) => dishIds.has(v.dishId));
   const votedDishIds = new Set(userVotes.map((v) => v.dishId));
   const nextDish = dishes.find((d) => !votedDishIds.has(d.id)) ?? null;
 
@@ -63,7 +66,7 @@ export async function joinSessionAction(sessionId: string) {
   });
 }
 
-export async function getPeopleResults(sessionId: string) {
+export async function getPeopleResults(sessionId: string, topic: string = "food") {
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -90,13 +93,14 @@ export async function getPeopleResults(sessionId: string) {
   });
 
   const dishes = await prisma.dish.findMany({
+    where: { topic },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
 
   return { session, members, dishes, currentUser: user };
 }
 
-export async function getDishResults(sessionId: string) {
+export async function getDishResults(sessionId: string, topic: string = "food") {
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -115,6 +119,7 @@ export async function getDishResults(sessionId: string) {
   const memberIds = members.map((m) => m.userId);
 
   const dishes = await prisma.dish.findMany({
+    where: { topic },
     include: {
       votes: {
         where: { userId: { in: memberIds } },

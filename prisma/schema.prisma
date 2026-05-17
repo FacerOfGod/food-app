@@ -52,6 +52,7 @@ model SessionMember {
 model Dish {
   id          String   @id @default(cuid())
   name        String
+  topic       String   @default("food")
   category    String?
   imageUrl    String?
   proposerId  String?

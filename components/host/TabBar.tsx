@@ -2,21 +2,15 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useRef, useEffect, useState } from "react";
-
-interface Tab {
-  key: string;
-  label: string;
-  href: string;
-}
+import { m } from "framer-motion";
 
 interface Props {
   sessionId: string;
 }
 
-const tabs: Tab[] = [
-  { key: "people", label: "Personnes", href: "" },
-  { key: "dishes", label: "Plats",     href: "" },
+const TABS = [
+  { key: "people", label: "Par personne" },
+  { key: "dishes", label: "Par thème" },
 ];
 
 export function TabBar({ sessionId }: Props) {
@@ -24,49 +18,28 @@ export function TabBar({ sessionId }: Props) {
   const view = searchParams.get("view");
   const activeView = view === "dishes" ? "dishes" : "people";
 
-  const resolvedTabs = tabs.map((t) => ({
-    ...t,
-    href: `/host/${sessionId}?view=${t.key}`,
-  }));
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
-
-  useEffect(() => {
-    const activeIndex = resolvedTabs.findIndex((t) => t.key === activeView);
-    const el = tabRefs.current[activeIndex];
-    const container = containerRef.current;
-    if (!el || !container) return;
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    setPill({ left: elRect.left - containerRect.left, width: elRect.width });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView, sessionId]);
-
   return (
-    <div className="bg-white border-b border-gray-200 py-3">
+    <div className="sticky top-0 z-30 backdrop-blur-md bg-white/90 border-b border-gray-200/60 py-3">
       <div className="max-w-3xl mx-auto px-4">
-        <div ref={containerRef} className="relative flex bg-gray-100 rounded-lg p-1 w-full">
-          {pill && (
-            <span
-              className="absolute top-1 bottom-1 rounded-md shadow-sm bg-white transition-all duration-200 ease-out"
-              style={{ left: pill.left, width: pill.width }}
-            />
-          )}
-
-          {resolvedTabs.map((tab, i) => (
+        <div className="relative flex bg-gray-100/80 backdrop-blur-sm rounded-lg p-1 w-full">
+          {TABS.map((tab) => (
             <Link
               key={tab.key}
-              href={tab.href}
-              ref={(el) => { tabRefs.current[i] = el; }}
-              className={`relative z-10 flex-1 text-center px-1 py-1.5 text-xs font-medium rounded-md transition-colors duration-200 ${
+              href={`/host/${sessionId}?view=${tab.key}`}
+              className={`relative z-10 flex-1 text-center px-1 py-1.5 text-xs font-medium rounded-md transition-colors duration-150 ${
                 tab.key === activeView
                   ? "text-gray-900"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {tab.label}
+              {tab.key === activeView && (
+                <m.span
+                  layoutId="host-tab-pill"
+                  className="absolute inset-0 rounded-md shadow-sm bg-white"
+                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                />
+              )}
+              <span className="relative">{tab.label}</span>
             </Link>
           ))}
         </div>

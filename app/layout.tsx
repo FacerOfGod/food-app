@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { MotionProvider } from "@/components/motion/MotionProvider";
 import "./globals.css";
 
 const geist = Geist({
@@ -19,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${geist.variable} h-full`}>
-      <body className="min-h-full bg-[#fafaf9] antialiased">{children}</body>
+      <body className="min-h-full bg-[#fafaf9] antialiased">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }

@@ -1,4 +1,4 @@
-export interface DishPreset {
+﻿export interface DishPreset {
   name: string;
   category: string;
   imageUrl: string;

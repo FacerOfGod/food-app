@@ -32,7 +32,7 @@ export function SessionPicker({ sessions, joinedSessions, currentSessionId }: Pr
   return (
     <div className="mb-4">
       <label className="block text-xs font-medium text-gray-500 mb-1.5">
-        Session
+        Groupe
       </label>
       <select
         value={currentSessionId ?? ""}
@@ -40,7 +40,7 @@ export function SessionPicker({ sessions, joinedSessions, currentSessionId }: Pr
         className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400"
       >
         <option value="" disabled>
-          Sélectionne une session…
+          Sélectionne un groupe…
         </option>
         {allSessions.map((s) => (
           <option key={s.id} value={s.id}>
