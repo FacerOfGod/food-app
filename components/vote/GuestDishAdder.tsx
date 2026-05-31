@@ -16,6 +16,8 @@ interface ExistingDish {
   id: string;
   name: string;
   imageUrl: string | null;
+  canModify: boolean;
+  author: string | null;
 }
 
 interface Props {
@@ -122,15 +124,16 @@ function PhotoPicker({
 }
 
 function SessionDishRow({
-  dish, isEditing, editName, editImageUrl, editUnsplashPhotos, editUnsplashLoading,
+  dish, isEditing, alreadyAdded, editName, editImageUrl, editUnsplashPhotos, editUnsplashLoading,
   isPending, topic, onToggleEdit, onChangeName, onChangeImage, onSave, onDelete,
 }: {
-  dish: ExistingDish; isEditing: boolean; editName: string; editImageUrl: string;
+  dish: ExistingDish; isEditing: boolean; alreadyAdded: boolean; editName: string; editImageUrl: string;
   editUnsplashPhotos: UnsplashPhoto[]; editUnsplashLoading: boolean; isPending: boolean;
   topic: TopicKey;
   onToggleEdit: () => void; onChangeName: (v: string) => void; onChangeImage: (v: string) => void;
   onSave: () => void; onDelete: () => void;
 }) {
+  const canModify = dish.canModify;
   const thumb = isEditing ? editImageUrl : (dish.imageUrl ?? "");
   const [thumbBroken, setThumbBroken] = useState(false);
   useEffect(() => { setThumbBroken(false); }, [thumb]);
@@ -143,32 +146,51 @@ function SessionDishRow({
       className={`rounded-xl border overflow-hidden transition-colors ${isEditing ? "border-indigo-300" : "border-gray-200"}`}
     >
       <div className="flex items-center bg-white">
-        <button onClick={onToggleEdit}
-          className="flex-1 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left px-3 py-2 min-w-0">
-          {showThumb ? (
-            <div className={`relative ${topic === "movies" ? "w-10 h-14" : "w-12 h-12"} rounded-lg overflow-hidden flex-shrink-0`}>
-              {thumb.startsWith("data:") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={thumb} alt={dish.name} className="w-full h-full object-cover"
-                  onError={() => setThumbBroken(true)} />
+        {(() => {
+          const inner = (
+            <>
+              {showThumb ? (
+                <div className={`relative ${topic === "movies" ? "w-10 h-14" : "w-12 h-12"} rounded-lg overflow-hidden flex-shrink-0`}>
+                  {thumb.startsWith("data:") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumb} alt={dish.name} className="w-full h-full object-cover"
+                      onError={() => setThumbBroken(true)} />
+                  ) : (
+                    <Image src={thumb} alt={dish.name} fill sizes="48px" className="object-cover"
+                      onError={() => setThumbBroken(true)} />
+                  )}
+                </div>
               ) : (
-                <Image src={thumb} alt={dish.name} fill sizes="48px" className="object-cover"
-                  onError={() => setThumbBroken(true)} />
+                <div className={placeholderClass}>{TOPIC_CONFIG[topic].emoji}</div>
               )}
-            </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">{dish.name}</p>
+                {dish.author && <p className="text-xs text-gray-400 truncate">par {dish.author}</p>}
+                {alreadyAdded && <p className="text-xs text-indigo-500">Déjà ajouté</p>}
+              </div>
+              <span className={`text-xs font-medium flex-shrink-0 mr-2 ${canModify ? "text-gray-500" : "text-gray-300"}`}>
+                {canModify ? (isEditing ? "✕" : "Éditer") : "Éditer"}
+              </span>
+            </>
+          );
+          return canModify ? (
+            <button onClick={onToggleEdit}
+              className="flex-1 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left px-3 py-2 min-w-0">
+              {inner}
+            </button>
           ) : (
-            <div className={placeholderClass}>{TOPIC_CONFIG[topic].emoji}</div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900">{dish.name}</p>
-          </div>
-          <span className="text-gray-500 text-xs font-medium flex-shrink-0 mr-2">{isEditing ? "✕" : "Éditer"}</span>
-        </button>
+            <div className="flex-1 flex items-center gap-3 text-left px-3 py-2 min-w-0 cursor-default">
+              {inner}
+            </div>
+          );
+        })()}
         <m.button
           onClick={onDelete}
-          disabled={isPending}
-          whileTap={{ scale: 0.88 }}
-          className="flex-shrink-0 px-3 self-stretch flex items-center text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+          disabled={isPending || !canModify}
+          whileTap={canModify ? { scale: 0.88 } : undefined}
+          className={`flex-shrink-0 px-3 self-stretch flex items-center transition-colors disabled:opacity-50 ${
+            canModify ? "text-gray-500 hover:text-red-400" : "text-gray-300 cursor-not-allowed"
+          }`}
         >
           🗑
         </m.button>
@@ -290,6 +312,11 @@ export function GuestDishAdder({ existingDishes, topic = "ingredients" }: Props)
   const existingNames = new Set(existingDishes.map((d) => d.name.toLowerCase()));
   const filtered = existingDishes.filter((d) => !search.trim() || normalize(d.name).includes(q));
   const isNewCustom = search.trim() !== "" && !existingNames.has(search.trim().toLowerCase());
+  // External API suggestions: only surface items not already in the catalogue.
+  // Existing ones already render below as editable rows, so a buttonless
+  // "Déjà ajouté" duplicate is just confusing noise.
+  const tmdbNew = tmdbResults.filter((mv) => !existingNames.has(mv.title.toLowerCase()));
+  const mealDbIngNew = mealDbIngResults.filter((ing) => !existingNames.has(ing.name.toLowerCase()));
 
   function toggleEdit(dish: ExistingDish) {
     if (editingDishId === dish.id) {
@@ -439,39 +466,31 @@ export function GuestDishAdder({ existingDishes, topic = "ingredients" }: Props)
             {tmdbError && (
               <p className="text-xs text-center text-red-400 py-2">{tmdbError}</p>
             )}
-            {tmdbResults.length > 0 && (
+            {tmdbNew.length > 0 && (
               <m.div className="space-y-2" variants={listContainerVariants} initial="hidden" animate="visible">
-                {tmdbResults.map((movie) => {
-                  const alreadyExists = existingNames.has(movie.title.toLowerCase());
-                  return (
-                    <m.button
-                      key={movie.id}
-                      variants={listItemVariants}
-                      type="button"
-                      disabled={isPending || alreadyExists}
-                      onClick={() => addDish({ name: movie.title, category: "Autre", imageUrl: movie.posterUrl, tmdbRating: movie.voteAverage })}
-                      className={`w-full flex items-center gap-3 rounded-2xl border bg-white text-left px-3 py-2 transition-all ${
-                        alreadyExists
-                          ? "border-gray-100 opacity-50 cursor-not-allowed"
-                          : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40"
-                      }`}
-                    >
-                      <div className="relative w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                        {movie.posterThumb ? (
-                          <Image src={movie.posterThumb} alt={movie.title} fill sizes="40px" className="object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-500 text-lg">🎬</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{movie.title}</p>
-                        {movie.year && <p className="text-xs text-gray-500">{movie.year}</p>}
-                        {alreadyExists && <p className="text-xs text-indigo-500">Déjà ajouté</p>}
-                      </div>
-                      {!alreadyExists && <span className="flex-shrink-0 text-indigo-400 text-lg font-bold">+</span>}
-                    </m.button>
-                  );
-                })}
+                {tmdbNew.map((movie) => (
+                  <m.button
+                    key={movie.id}
+                    variants={listItemVariants}
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => addDish({ name: movie.title, category: "Autre", imageUrl: movie.posterUrl, tmdbRating: movie.voteAverage })}
+                    className="w-full flex items-center gap-3 rounded-2xl border bg-white text-left px-3 py-2 transition-all border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                  >
+                    <div className="relative w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                      {movie.posterThumb ? (
+                        <Image src={movie.posterThumb} alt={movie.title} fill sizes="40px" className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500 text-lg">🎬</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{movie.title}</p>
+                      {movie.year && <p className="text-xs text-gray-500">{movie.year}</p>}
+                    </div>
+                    <span className="flex-shrink-0 text-indigo-400 text-lg font-bold">+</span>
+                  </m.button>
+                ))}
               </m.div>
             )}
           </>
@@ -483,37 +502,29 @@ export function GuestDishAdder({ existingDishes, topic = "ingredients" }: Props)
             {mealDbIngLoading && (
               <p className="text-xs text-center text-indigo-500 py-2">Recherche d&apos;ingrédients…</p>
             )}
-            {mealDbIngResults.length > 0 && (
+            {mealDbIngNew.length > 0 && (
               <m.div className="space-y-2" variants={listContainerVariants} initial="hidden" animate="visible">
-                {mealDbIngResults.map((ing) => {
-                  const alreadyExists = existingNames.has(ing.name.toLowerCase());
-                  return (
-                    <m.button
-                      key={ing.id}
-                      variants={listItemVariants}
-                      type="button"
-                      disabled={isPending || alreadyExists}
-                      onClick={() => addDish({ name: ing.name, category: "Autre", imageUrl: ing.imageUrl })}
-                      className={`w-full flex items-center gap-3 rounded-2xl border bg-white text-left px-3 py-2 transition-all ${
-                        alreadyExists
-                          ? "border-gray-100 opacity-50 cursor-not-allowed"
-                          : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40"
-                      }`}
-                    >
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                        <Image src={ing.thumb} alt={ing.name} fill sizes="48px" className="object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{ing.name}</p>
-                        {ing.description && (
-                          <p className="text-xs text-gray-500 truncate">{ing.description.slice(0, 60)}…</p>
-                        )}
-                        {alreadyExists && <p className="text-xs text-indigo-500">Déjà ajouté</p>}
-                      </div>
-                      {!alreadyExists && <span className="flex-shrink-0 text-indigo-400 text-lg font-bold">+</span>}
-                    </m.button>
-                  );
-                })}
+                {mealDbIngNew.map((ing) => (
+                  <m.button
+                    key={ing.id}
+                    variants={listItemVariants}
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => addDish({ name: ing.name, category: "Autre", imageUrl: ing.imageUrl })}
+                    className="w-full flex items-center gap-3 rounded-2xl border bg-white text-left px-3 py-2 transition-all border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                  >
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                      <Image src={ing.thumb} alt={ing.name} fill sizes="48px" className="object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{ing.name}</p>
+                      {ing.description && (
+                        <p className="text-xs text-gray-500 truncate">{ing.description.slice(0, 60)}…</p>
+                      )}
+                    </div>
+                    <span className="flex-shrink-0 text-indigo-400 text-lg font-bold">+</span>
+                  </m.button>
+                ))}
               </m.div>
             )}
           </>
@@ -530,6 +541,7 @@ export function GuestDishAdder({ existingDishes, topic = "ingredients" }: Props)
             <SessionDishRow
               key={dish.id} dish={dish}
               isEditing={editingDishId === dish.id}
+              alreadyAdded={search.trim() !== ""}
               editName={editName} editImageUrl={editImageUrl}
               editUnsplashPhotos={editUnsplashPhotos} editUnsplashLoading={editUnsplashLoading}
               isPending={isPending}

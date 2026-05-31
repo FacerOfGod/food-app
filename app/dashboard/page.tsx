@@ -140,6 +140,8 @@ export default async function DashboardPage({ searchParams }: Props) {
               id: d.id,
               name: d.name,
               imageUrl: d.imageUrl,
+              canModify: d.canModify,
+              author: d.author,
             }))}
           />
         )}

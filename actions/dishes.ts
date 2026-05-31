@@ -60,11 +60,25 @@ export async function seedPresetDishesAction(topic: string = "ingredients") {
 export async function getAllDishes(topic: string = "ingredients") {
   const user = await getCurrentUser();
   if (!user) return null;
-  return prisma.dish.findMany({
+  const dishes = await prisma.dish.findMany({
     where: { topic },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-    select: { id: true, name: true, imageUrl: true },
+    select: {
+      id: true,
+      name: true,
+      imageUrl: true,
+      proposerId: true,
+      proposer: { select: { name: true, email: true } },
+    },
   });
+  // Drop proposerId/proposer from the client-facing shape — only ship the
+  // booleans/strings we need. canModify mirrors the server-side guard;
+  // author is the display name of whoever added the dish (null for presets).
+  return dishes.map(({ proposerId, proposer, ...d }) => ({
+    ...d,
+    canModify: canModifyDish(user, { proposerId }),
+    author: proposer ? (proposer.name ?? proposer.email) : null,
+  }));
 }
 
 function duplicateLabel(topic: string): string {
