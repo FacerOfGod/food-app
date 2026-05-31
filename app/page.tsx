@@ -5,7 +5,7 @@ import { BobLogo } from "@/components/brand/BobLogo";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated blobs */}
       <div className="pointer-events-none select-none absolute -top-20 -right-20 w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl animate-blob" />
       <div className="pointer-events-none select-none absolute -bottom-20 -left-16 w-64 h-64 bg-teal-200/20 rounded-full blur-2xl animate-blob animation-delay-2000" />

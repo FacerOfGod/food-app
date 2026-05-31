@@ -269,10 +269,10 @@ export function VotingInterface({
           </m.div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-hidden">
-          <div className="w-full max-w-sm">
-            {/* Card — clips the horizontal slide animation */}
-            <div className="relative overflow-hidden rounded-3xl mb-3">
+        <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
+          <div className="w-full max-w-sm mx-auto flex-1 flex flex-col">
+            {/* Card — grows to fill available vertical space */}
+            <div className="relative flex-1 overflow-hidden rounded-3xl mb-3">
               <AnimatePresence mode="wait" initial={false}>
                 <m.div
                   key={nextDish.id}
@@ -280,24 +280,26 @@ export function VotingInterface({
                   initial="enter"
                   animate="visible"
                   exit="exit"
+                  className="absolute inset-0"
                 >
-                  <div className="relative bg-gradient-to-b from-white to-gray-50/50 rounded-3xl border border-gray-200 shadow-[0_4px_16px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
-                    <AnimatePresence>
-                      {voteHistory.length > 0 && (
-                        <m.button
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 0.15 }}
-                          onClick={undoVote}
-                          disabled={isPending}
-                          className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-700 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors disabled:opacity-40"
-                        >
-                          ↩ Annuler
-                        </m.button>
-                      )}
-                    </AnimatePresence>
-                    <div className="relative w-full h-52 overflow-hidden bg-gray-100">
+                  <div className="h-full flex flex-col rounded-3xl border border-gray-200 shadow-[0_4px_16px_rgba(0,0,0,0.10),0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden bg-white">
+                    {/* Image — fills available space */}
+                    <div className="relative flex-1 overflow-hidden bg-gray-100">
+                      <AnimatePresence>
+                        {voteHistory.length > 0 && (
+                          <m.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={undoVote}
+                            disabled={isPending}
+                            className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-700 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white transition-colors disabled:opacity-40"
+                          >
+                            ↩ Annuler
+                          </m.button>
+                        )}
+                      </AnimatePresence>
                       {nextDish.imageUrl ? (
                         <>
                           {(topic === "movies" || topic === "ingredients" || topic === "activities") && (
@@ -329,6 +331,7 @@ export function VotingInterface({
                         </div>
                       )}
                     </div>
+                    {/* Description */}
                     <div className="px-5 py-4 text-center">
                       {(nextDish.category || nextDish.proposer?.name) && (
                         <p className="text-xs text-gray-500 uppercase tracking-widest mb-1 truncate">
@@ -367,8 +370,8 @@ export function VotingInterface({
               ))}
             </div>
 
-            {/* Progress — stays fixed outside AnimatePresence */}
-            <div className="text-center mt-4 space-y-1.5">
+            {/* Progress */}
+            <div className="text-center mt-2 space-y-1.5">
               <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
                 <m.div
                   className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-indigo-500"
