@@ -35,7 +35,8 @@ export function OtpForm({ email, redirectTo, initialCode }: Props) {
   useEffect(() => {
     if (isFull && code !== lastSubmittedCode.current && !pending) {
       lastSubmittedCode.current = code;
-      formRef.current?.requestSubmit();
+      const timer = setTimeout(() => formRef.current?.requestSubmit(), 800);
+      return () => clearTimeout(timer);
     }
   }, [code, isFull, pending]);
 

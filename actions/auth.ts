@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createOtp, verifyOtp } from "@/lib/otp";
 import { sendOtpEmail } from "@/lib/email";
-import { setUserCookie, clearUserCookie } from "@/lib/session";
+import { setUserCookie, clearUserCookie, getCurrentUser } from "@/lib/session";
 import { safeRedirectPath } from "@/lib/redirects";
 import { otpSendLimiter, otpVerifyLimiter } from "@/lib/rate-limit";
 
@@ -17,7 +17,6 @@ function readString(formData: FormData, key: string): string {
 
 export async function sendOtpAction(_prevState: unknown, formData: FormData) {
   const email = readString(formData, "email").trim().toLowerCase();
-  const submittedName = readString(formData, "name").trim();
   const rawRedirect = readString(formData, "redirectTo") || null;
   const redirectTo = safeRedirectPath(rawRedirect, "/dashboard");
 
@@ -33,15 +32,11 @@ export async function sendOtpAction(_prevState: unknown, formData: FormData) {
     return { error: "Trop de demandes. Réessayez dans une minute." };
   }
 
-  // Resolve the name without revealing whether the account exists.
-  // Existing accounts keep their stored name; new accounts use the submitted
-  // value (or a generic fallback), so the response shape is identical either way.
   const existingUser = await prisma.user.findUnique({
     where: { email },
     select: { name: true },
   });
-  const name =
-    existingUser?.name?.trim() || submittedName || DEFAULT_NAME;
+  const name = existingUser?.name?.trim() || DEFAULT_NAME;
 
   try {
     const code = await createOtp(email, name);
@@ -103,11 +98,10 @@ export async function verifyOtpAction(_prevState: unknown, formData: FormData) {
     return { error: "Code invalide ou expiré." };
   }
 
-  // Upsert user without overwriting existing name
   const user = await prisma.user.upsert({
     where: { email },
-    update: {}, // Keep existing name
-    create: { email, name: result.name },
+    update: {},
+    create: { email, name: null },
   });
 
   if (user.isBanned) {
@@ -115,6 +109,27 @@ export async function verifyOtpAction(_prevState: unknown, formData: FormData) {
   }
 
   await setUserCookie(user.id);
+
+  if (!user.name?.trim()) {
+    const nameParams = new URLSearchParams({ redirectTo });
+    redirect(`/auth/name?${nameParams.toString()}`);
+  }
+
+  redirect(redirectTo);
+}
+
+export async function setNameAction(_prevState: unknown, formData: FormData) {
+  const name = readString(formData, "name").trim();
+  const rawRedirect = readString(formData, "redirectTo") || null;
+  const redirectTo = safeRedirectPath(rawRedirect, "/dashboard");
+
+  if (!name) return { error: "Le prénom est requis." };
+  if (name.length > 50) return { error: "Le prénom est trop long (50 caractères max)." };
+
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
+
+  await prisma.user.update({ where: { id: user.id }, data: { name } });
 
   redirect(redirectTo);
 }
