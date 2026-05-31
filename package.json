@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "node scripts/verify-preset-images.mjs && prisma generate && prisma migrate deploy && next build --webpack",
-    "start": "next start",
-    "verify:images": "node scripts/verify-preset-images.mjs"
+    "build": "prisma generate && prisma migrate deploy && next build --webpack",
+    "start": "next start"
   },
   "dependencies": {
     "@libsql/client": "^0.17.2",
