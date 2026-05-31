@@ -109,6 +109,14 @@ body {
   animation: bob-hue-shift-soft 6s ease-in-out infinite;
 }
 
+@keyframes falling-food {
+  0%   { transform: translateY(0)                      translateX(0)                rotate(0deg); }
+  25%  { transform: translateY(25vh)                   translateX(calc(var(--drift) * 0.5))  rotate(90deg); }
+  50%  { transform: translateY(50vh)                   translateX(var(--drift))     rotate(180deg); }
+  75%  { transform: translateY(75vh)                   translateX(calc(var(--drift) * 0.5))  rotate(270deg); }
+  100% { transform: translateY(calc(100vh + 6rem))     translateX(0)                rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bob-logo,
   .bob-logo--compact,
@@ -117,5 +125,9 @@ body {
   }
   .bob-logo * {
     animation: none !important;
+  }
+  [style*="falling-food"] {
+    animation: none !important;
+    display: none;
   }
 }

@@ -46,7 +46,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const topicCfg = TOPIC_CONFIG[topic];
 
   return (
-    <main className="min-h-screen bg-[#fafaf9]">
+    <main className="min-h-screen">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_0_#e4e4e7] px-4 py-3 flex items-center justify-between">
         <Link href="/dashboard" aria-label="Bob — accueil" className="flex items-center">
           <BobLogo size={36} compact />

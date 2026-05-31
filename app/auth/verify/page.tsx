@@ -12,7 +12,7 @@ export default async function VerifyPage({ searchParams }: Props) {
 
   if (!email) {
     return (
-      <main className="hero-gradient min-h-screen flex items-center justify-center p-4">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <p className="text-gray-500">
           Lien invalide.{" "}
           <a href="/" className="text-indigo-500 underline">
@@ -24,7 +24,7 @@ export default async function VerifyPage({ searchParams }: Props) {
   }
 
   return (
-    <main className="hero-gradient min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated blobs */}
       <div className="pointer-events-none select-none absolute -top-20 -right-20 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl animate-blob" />
       <div className="pointer-events-none select-none absolute -bottom-20 -left-16 w-64 h-64 bg-sky-200/20 rounded-full blur-2xl animate-blob animation-delay-2000" />

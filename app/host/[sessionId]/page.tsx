@@ -45,7 +45,7 @@ export default async function HostDashboardPage({ params, searchParams }: Props)
   const joinLink = `${origin}/join/${session.id}`;
 
   return (
-    <main className="min-h-screen bg-[#fafaf9]">
+    <main className="min-h-screen">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_0_#e4e4e7] px-4 py-3 flex items-center">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link href="/dashboard" className="text-gray-500 hover:text-gray-600 text-sm flex-shrink-0">

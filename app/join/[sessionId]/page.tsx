@@ -25,7 +25,7 @@ export default async function JoinPage({ params, searchParams }: Props) {
 
   if (!session) {
     return (
-      <main className="hero-gradient min-h-screen flex items-center justify-center p-4">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-14 h-14 mx-auto rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-2xl mb-4">
             🔍
@@ -49,7 +49,7 @@ export default async function JoinPage({ params, searchParams }: Props) {
   const redirectTo = `/join/${sessionId}${topic ? `?topic=${topic}` : ""}`;
 
   return (
-    <main className="hero-gradient min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated blobs */}
       <div className="pointer-events-none select-none absolute -top-20 -right-20 w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl animate-blob" />
       <div className="pointer-events-none select-none absolute -bottom-20 -left-16 w-64 h-64 bg-teal-200/20 rounded-full blur-2xl animate-blob animation-delay-2000" />
