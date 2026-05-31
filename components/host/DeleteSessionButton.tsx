@@ -29,7 +29,7 @@ export function DeleteSessionButton({ sessionId, sessionName }: { sessionId: str
       onClick={handleDelete}
       disabled={isPending}
       whileTap={{ scale: 0.88 }}
-      className={`p-2 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors ${
+      className={`p-2 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors ${
         isPending ? "opacity-50 cursor-not-allowed" : ""
       }`}
       aria-label="Supprimer le groupe"

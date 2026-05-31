@@ -20,13 +20,13 @@ export function CreateSessionForm() {
           type="text"
           required
           placeholder="Ex: Famille, Amis de Lausanne, Collègues…"
-          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all"
+          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-400 transition-all"
         />
         <m.button
           type="submit"
           disabled={pending}
           whileTap={{ scale: 0.97 }}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-60 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all whitespace-nowrap shadow-[0_2px_8px_rgba(232,93,4,0.25)]"
+          className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-60 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all whitespace-nowrap shadow-[0_2px_8px_rgba(99, 102, 241,0.25)]"
         >
           {pending ? "…" : "Créer"}
         </m.button>

@@ -11,12 +11,13 @@ import { TopicTabBar } from "@/components/ui/TopicTabBar";
 import { logoutAction } from "@/actions/auth";
 import { isAdminEmail } from "@/lib/admin";
 import { TOPIC_CONFIG, type TopicKey } from "@/lib/presets";
+import { BobLogo } from "@/components/brand/BobLogo";
 
 interface Props {
   searchParams: Promise<{ view?: string; topic?: string }>;
 }
 
-const VALID_TOPICS: TopicKey[] = ["food", "movies", "activities"];
+const VALID_TOPICS: TopicKey[] = ["ingredients", "movies", "activities"];
 
 export default async function DashboardPage({ searchParams }: Props) {
   const { view: rawView, topic: rawTopic } = await searchParams;
@@ -26,7 +27,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       : "sessions";
   const topic: TopicKey = VALID_TOPICS.includes(rawTopic as TopicKey)
     ? (rawTopic as TopicKey)
-    : "food";
+    : "ingredients";
 
   const data = await getHostSessions();
   if (!data) redirect("/");
@@ -47,18 +48,15 @@ export default async function DashboardPage({ searchParams }: Props) {
   return (
     <main className="min-h-screen bg-[#fafaf9]">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-[0_1px_0_#e4e4e7] px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-lg shadow-sm">
-            🍽️
-          </div>
-          <span className="font-black text-gray-900 text-xl">Bob</span>
-        </div>
+        <Link href="/dashboard" aria-label="Bob — accueil" className="flex items-center">
+          <BobLogo size={36} compact />
+        </Link>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500">{user.name}</span>
           {isAdminEmail(user.email) && (
             <Link
               href="/admin"
-              className="text-sm text-orange-500 hover:text-orange-700 font-medium transition-colors"
+              className="text-sm text-emerald-500 hover:text-emerald-700 font-medium transition-colors"
             >
               Admin
             </Link>
@@ -66,7 +64,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           <form action={logoutAction}>
             <button
               type="submit"
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-600 transition-colors"
             >
               Déconnexion
             </button>
@@ -82,10 +80,8 @@ export default async function DashboardPage({ searchParams }: Props) {
         {view === "sessions" && (
           <>
             <div className="mb-6">
-              <h1 className="text-2xl font-black text-gray-900 mb-1">Mes groupes</h1>
-              <p className="text-sm text-gray-500">
-                Créez un groupe et partagez le lien avec votre famille.
-              </p>
+              <h1 className="text-2xl font-black text-gray-900 mb-1">Groupes</h1>
+              <p className="text-sm text-gray-500">Créez un groupe et partagez le lien avec votre famille.</p>
             </div>
             <SessionList sessions={sessions} joinedSessions={joinedSessions} />
           </>
@@ -104,7 +100,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         {view === "mes-choix" && votingData && (
           votingData.totalDishes === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-3xl mb-4">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-3xl mb-4">
                 {topicCfg.emoji}
               </div>
               <p className="text-gray-500 text-sm">
@@ -142,7 +138,6 @@ export default async function DashboardPage({ searchParams }: Props) {
               id: d.id,
               name: d.name,
               imageUrl: d.imageUrl,
-              authorsJson: d.authorsJson,
             }))}
           />
         )}
@@ -160,7 +155,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         {view === "vote" && votingData && (
           votingData.totalDishes === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-3xl mb-4">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-3xl mb-4">
                 {topicCfg.emoji}
               </div>
               <p className="text-gray-500 text-sm">

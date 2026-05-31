@@ -3,11 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #e85d04;
-  --primary-light: #f97316;
-  --primary-dim: #ff8c42;
-  --primary-bg: #fff7ed;
-  --primary-glow: rgba(232, 93, 4, 0.15);
+  --primary: #10b981;
+  --primary-light: #34d399;
+  --primary-dim: #6ee7b7;
+  --primary-bg: #ecfdf5;
+  --primary-glow: rgba(16, 185, 129, 0.15);
 
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(255, 255, 255, 0.4);
@@ -15,7 +15,7 @@
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
-  --shadow-float: 0 8px 32px rgba(232, 93, 4, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 8px 32px rgba(16, 185, 129, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
 
   --success: #10b981;
   --success-bg: #ecfdf5;
@@ -60,7 +60,7 @@ body {
 }
 
 .hero-gradient {
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, #fff2e8 0%, #fafaf9 65%);
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, #ecfdf5 0%, #fafaf9 65%);
 }
 
 @keyframes blob-shift {
@@ -88,4 +88,34 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+@keyframes bob-hue-shift {
+  0%, 100% { filter: hue-rotate(-6deg) saturate(1.05) drop-shadow(0 8px 24px rgba(16, 185, 129, 0.25)); }
+  50%      { filter: hue-rotate(10deg) saturate(1.15) drop-shadow(0 12px 32px rgba(16, 185, 129, 0.35)); }
+}
+
+.bob-logo {
+  animation: bob-hue-shift 6s ease-in-out infinite;
+  will-change: filter;
+}
+
+@keyframes bob-hue-shift-soft {
+  0%, 100% { filter: hue-rotate(-4deg) saturate(1.05); }
+  50%      { filter: hue-rotate(8deg) saturate(1.12); }
+}
+
+.bob-logo--compact {
+  animation: bob-hue-shift-soft 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bob-logo,
+  .bob-logo--compact,
+  .animate-blob {
+    animation: none;
+  }
+  .bob-logo * {
+    animation: none !important;
+  }
 }

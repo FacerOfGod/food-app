@@ -40,7 +40,7 @@ export function CopyButton({ text, compact }: { text: string; compact?: boolean 
     <m.button
       onClick={handleCopy}
       whileTap={{ scale: 0.97 }}
-      className="mt-2 text-xs text-orange-600 font-medium hover:text-orange-800 transition-colors"
+      className="mt-2 text-xs text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
     >
       {copied ? "✓ Copié !" : "Copier le lien"}
     </m.button>

@@ -1,17 +1,20 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, getUserId } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
+import { parseTopicsJson, stringifyTopics, isValidTopic } from "@/lib/topics";
+import type { TopicKey } from "@/lib/presets";
 
 export async function createSessionAction(_prevState: unknown, formData: FormData) {
-  const userId = await getUserId();
-  const user = userId ? await getCurrentUser() : null;
+  const user = await getCurrentUser();
   if (!user) {
-    return { error: `Auth échouée (cookie user_id = ${userId ?? "vide"}) — rechargez la page ou reconnectez-vous.` };
+    return { error: "Session expirée — reconnectez-vous." };
   }
 
-  const name = (formData.get("name") as string)?.trim();
+  const raw = formData.get("name");
+  const name = typeof raw === "string" ? raw.trim() : "";
   if (!name) return { error: "Veuillez donner un nom à la session." };
 
   let session;
@@ -26,8 +29,8 @@ export async function createSessionAction(_prevState: unknown, formData: FormDat
       },
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return { error: `Erreur DB: ${msg}` };
+    console.error("createSessionAction DB error:", e);
+    return { error: "Impossible de créer le groupe. Réessayez." };
   }
 
   redirect(`/host/${session.id}`);
@@ -59,6 +62,108 @@ export async function getHostSessions() {
   });
 
   return { user, sessions, joinedSessions };
+}
+
+export async function getSessionPartageData(sessionId: string) {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: {
+      id: true,
+      name: true,
+      hostId: true,
+      allowedTopicsJson: true,
+      members: {
+        where: { userId: user.id },
+        select: { sharedTopicsJson: true },
+      },
+    },
+  });
+  if (!session) return null;
+
+  const isHost = session.hostId === user.id;
+  const isMember = session.members.length > 0;
+  if (!isHost && !isMember) return null;
+
+  return {
+    id: session.id,
+    name: session.name,
+    role: isHost ? ("host" as const) : ("member" as const),
+    allowedTopics: parseTopicsJson(session.allowedTopicsJson),
+    sharedTopics: parseTopicsJson(session.members[0]?.sharedTopicsJson ?? "[]"),
+  };
+}
+
+export async function setSessionAllowedTopicsAction(sessionId: string, topics: string[]) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
+
+  const session = await prisma.session.findUnique({ where: { id: sessionId } });
+  if (!session) return { error: "Groupe introuvable." };
+  if (session.hostId !== user.id) return { error: "Seul l'hôte peut modifier les thèmes du groupe." };
+
+  const valid = topics.filter(isValidTopic) as TopicKey[];
+  if (valid.length === 0) return { error: "Au moins un thème doit rester actif." };
+
+  await prisma.session.update({
+    where: { id: sessionId },
+    data: { allowedTopicsJson: stringifyTopics(valid) },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/host/${sessionId}`);
+  return { success: true };
+}
+
+export async function setMemberSharedTopicsAction(sessionId: string, topics: string[]) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
+
+  const session = await prisma.session.findUnique({ where: { id: sessionId } });
+  if (!session) return { error: "Groupe introuvable." };
+
+  const membership = await prisma.sessionMember.findUnique({
+    where: { sessionId_userId: { sessionId, userId: user.id } },
+  });
+  if (!membership) return { error: "Vous n'êtes pas membre de ce groupe." };
+
+  const allowed = parseTopicsJson(session.allowedTopicsJson);
+  const valid = topics
+    .filter(isValidTopic)
+    .filter((t) => allowed.includes(t as TopicKey)) as TopicKey[];
+
+  await prisma.sessionMember.update({
+    where: { sessionId_userId: { sessionId, userId: user.id } },
+    data: { sharedTopicsJson: stringifyTopics(valid) },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/host/${sessionId}`);
+  return { success: true };
+}
+
+export async function leaveSessionAction(sessionId: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Non authentifié." };
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { hostId: true },
+  });
+  if (!session) return { error: "Groupe introuvable." };
+  // The host can't leave — they must delete the group instead.
+  if (session.hostId === user.id) {
+    return { error: "L'hôte ne peut pas quitter son propre groupe. Supprimez-le." };
+  }
+
+  await prisma.sessionMember.deleteMany({
+    where: { sessionId, userId: user.id },
+  });
+
+  revalidatePath("/dashboard");
+  return { success: true };
 }
 
 export async function deleteSessionAction(sessionId: string) {

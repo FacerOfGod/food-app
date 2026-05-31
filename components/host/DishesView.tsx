@@ -32,10 +32,10 @@ export function DishesView({ dishStats }: Props) {
   if (dishStats.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-400 mb-2">Aucun vote pour ce groupe.</p>
+        <p className="text-sm text-gray-500 mb-2">Aucun vote pour ce groupe.</p>
         <Link
           href="/dashboard?view=vote"
-          className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors"
+          className="text-sm font-medium text-indigo-500 hover:text-indigo-600 transition-colors"
         >
           Voter sur les plats !
         </Link>
@@ -62,7 +62,7 @@ export function DishesView({ dishStats }: Props) {
           value={searchQuery}
           onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(20); }}
           placeholder="Rechercher un plat…"
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 bg-white transition-all"
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-400 bg-white transition-all"
         />
       </div>
 
@@ -73,7 +73,7 @@ export function DishesView({ dishStats }: Props) {
         animate="visible"
       >
         {filteredDishes.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-4">Aucun résultat.</p>
+          <p className="text-center text-sm text-gray-500 py-4">Aucun résultat.</p>
         ) : visibleDishes.map((dish, index) => {
           const likeCount = dish.likers.length;
           const dislikeCount = dish.dislikers.length;
@@ -88,13 +88,13 @@ export function DishesView({ dishStats }: Props) {
               onClick={() => setSelectedDish(dish)}
               whileHover={{ y: -1 }}
               transition={{ duration: 0.15 }}
-              className="w-full bg-white border border-gray-100 rounded-2xl p-4 hover:border-orange-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all text-left shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)]"
+              className="w-full bg-white border border-gray-100 rounded-2xl p-4 hover:border-indigo-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all text-left shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)]"
             >
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <span className="font-semibold text-gray-900 text-sm">{dish.name}</span>
                   {dish.category && (
-                    <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                       {dish.category}
                     </span>
                   )}
@@ -103,7 +103,7 @@ export function DishesView({ dishStats }: Props) {
                   <span className="text-xs font-semibold text-gray-700">
                     {dish.avgRating > 0 ? dish.avgRating.toFixed(1) : "—"}
                   </span>
-                  <span className="text-xs text-gray-400"> / 5</span>
+                  <span className="text-xs text-gray-500"> / 5</span>
                 </div>
               </div>
 
@@ -135,12 +135,12 @@ export function DishesView({ dishStats }: Props) {
                   </div>
                   <div className="flex justify-between mt-1.5">
                     <span className="text-xs text-green-600">👍 {likeCount} aime</span>
-                    <span className="text-xs text-gray-400">{total} votes</span>
+                    <span className="text-xs text-gray-500">{total} votes</span>
                     <span className="text-xs text-red-500">{dislikeCount} évite 👎</span>
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-gray-400">Aucun vote</p>
+                <p className="text-xs text-gray-500">Aucun vote</p>
               )}
             </m.button>
           );
@@ -150,7 +150,7 @@ export function DishesView({ dishStats }: Props) {
       {filteredDishes.length > visibleCount && (
         <button
           onClick={() => setVisibleCount((n) => n + 20)}
-          className="w-full mt-3 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200 transition-colors"
+          className="w-full mt-3 py-2.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition-colors"
         >
           Voir plus ({filteredDishes.length - visibleCount} restants)
         </button>
@@ -178,7 +178,7 @@ export function DishesView({ dishStats }: Props) {
               <h3 className="font-bold text-gray-900 text-base mb-1">
                 {selectedDish.name}
               </h3>
-              <p className="text-xs text-gray-400 mb-4">
+              <p className="text-xs text-gray-500 mb-4">
                 {selectedDish.totalVotes} vote{selectedDish.totalVotes !== 1 ? "s" : ""}
               </p>
 
@@ -208,7 +208,7 @@ export function DishesView({ dishStats }: Props) {
                   <div className="space-y-1">
                     {selectedDish.likers.map((u) => (
                       <div key={u.id} className="flex items-center gap-2 text-sm text-gray-700">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-200 to-emerald-300 text-emerald-800 text-xs font-bold flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-200 to-indigo-300 text-indigo-800 text-xs font-bold flex items-center justify-center">
                           {(u.name ?? "?")[0].toUpperCase()}
                         </div>
                         {u.name ?? "Anonyme"}
@@ -219,7 +219,7 @@ export function DishesView({ dishStats }: Props) {
               )}
 
               {selectedDish.dislikers.length === 0 && selectedDish.likers.length === 0 && (
-                <p className="text-sm text-gray-400">Aucun vote extrême.</p>
+                <p className="text-sm text-gray-500">Aucun vote extrême.</p>
               )}
 
               <button

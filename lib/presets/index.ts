@@ -1,24 +1,24 @@
 export type { DishPreset } from './food';
-export { DISHES_PRESET, PRESET_CATEGORIES } from './food';
 export { MOVIES_PRESET, MOVIE_CATEGORIES } from './movies';
 export { ACTIVITIES_PRESET, ACTIVITY_CATEGORIES } from './activities';
+export { INGREDIENTS_PRESET, INGREDIENT_CATEGORIES } from './ingredients';
 
 export const TOPIC_CONFIG = {
-  food: {
-    key: "food",
-    label: "Nourriture",
+  ingredients: {
+    key: "ingredients",
+    label: "Ingrédients",
     emoji: "🍽️",
-    itemLabel: "plat",
+    itemLabel: "ingrédient",
     itemLabelFem: false,
-    itemLabelPlural: "plats",
-    searchPlaceholder: "Rechercher un plat…",
-    addPlaceholder: "Filtrer ou ajouter un plat…",
+    itemLabelPlural: "ingrédients",
+    searchPlaceholder: "Rechercher un ingrédient…",
+    addPlaceholder: "Filtrer ou ajouter un ingrédient…",
     voteTitle: "Voter",
-    voteDesc: "Note chaque plat pour aider à choisir le repas idéal.",
+    voteDesc: "Note chaque ingrédient pour composer le menu idéal.",
     choixTitle: "Mes choix",
-    choixDesc: "Retrouve tous les plats et modifie tes votes à tout moment.",
-    proposerTitle: "Proposer un plat",
-    proposerDesc: "Suggère un nouveau plat à ajouter au catalogue partagé.",
+    choixDesc: "Retrouve tous les ingrédients et modifie tes votes à tout moment.",
+    proposerTitle: "Proposer un ingrédient",
+    proposerDesc: "Suggère un ingrédient à ajouter au catalogue partagé.",
   },
   movies: {
     key: "movies",
@@ -58,19 +58,31 @@ export type TopicKey = keyof typeof TOPIC_CONFIG;
 
 export const TOPICS = Object.values(TOPIC_CONFIG);
 
-import { DISHES_PRESET, PRESET_CATEGORIES } from './food';
 import { MOVIES_PRESET, MOVIE_CATEGORIES } from './movies';
 import { ACTIVITIES_PRESET, ACTIVITY_CATEGORIES } from './activities';
+import { INGREDIENTS_PRESET, INGREDIENT_CATEGORIES } from './ingredients';
 import type { DishPreset } from './food';
 
+const PRESET_BY_TOPIC: Record<TopicKey, DishPreset[]> = {
+  ingredients: INGREDIENTS_PRESET,
+  movies: MOVIES_PRESET,
+  activities: ACTIVITIES_PRESET,
+};
+
+const CATEGORIES_BY_TOPIC: Record<TopicKey, string[]> = {
+  ingredients: INGREDIENT_CATEGORIES,
+  movies: MOVIE_CATEGORIES,
+  activities: ACTIVITY_CATEGORIES,
+};
+
+function isTopicKey(topic: string): topic is TopicKey {
+  return topic in PRESET_BY_TOPIC;
+}
+
 export function getPresetForTopic(topic: string): DishPreset[] {
-  if (topic === "movies") return MOVIES_PRESET;
-  if (topic === "activities") return ACTIVITIES_PRESET;
-  return DISHES_PRESET;
+  return isTopicKey(topic) ? PRESET_BY_TOPIC[topic] : [];
 }
 
 export function getCategoriesForTopic(topic: string): string[] {
-  if (topic === "movies") return MOVIE_CATEGORIES;
-  if (topic === "activities") return ACTIVITY_CATEGORIES;
-  return PRESET_CATEGORIES;
+  return isTopicKey(topic) ? CATEGORIES_BY_TOPIC[topic] : [];
 }

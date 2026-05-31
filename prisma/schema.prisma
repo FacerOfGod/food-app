@@ -26,47 +26,61 @@ model OtpCode {
   code      String
   expiresAt DateTime
   used      Boolean  @default(false)
+  attempts  Int      @default(0)
   createdAt DateTime @default(now())
+
+  @@index([email, used, expiresAt])
+  @@index([createdAt])
 }
 
 model Session {
-  id        String          @id @default(cuid())
-  name      String
-  hostId    String
-  host      User            @relation("HostedSessions", fields: [hostId], references: [id])
-  createdAt DateTime        @default(now())
-  members   SessionMember[]
+  id                String          @id @default(cuid())
+  name              String
+  hostId            String
+  host              User            @relation("HostedSessions", fields: [hostId], references: [id])
+  allowedTopicsJson String          @default("[\"ingredients\",\"movies\",\"activities\"]")
+  createdAt         DateTime        @default(now())
+  members           SessionMember[]
+
+  @@index([hostId])
 }
 
 model SessionMember {
-  id        String   @id @default(cuid())
-  sessionId String
-  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  joinedAt  DateTime @default(now())
+  id               String   @id @default(cuid())
+  sessionId        String
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedTopicsJson String   @default("[\"ingredients\",\"movies\",\"activities\"]")
+  joinedAt         DateTime @default(now())
 
   @@unique([sessionId, userId])
+  @@index([sessionId])
 }
 
 model Dish {
   id          String   @id @default(cuid())
   name        String
-  topic       String   @default("food")
+  topic       String   @default("ingredients")
   category    String?
   imageUrl    String?
+  tmdbRating  Float?
   proposerId  String?
-  proposer    User?    @relation("ProposedDishes", fields: [proposerId], references: [id])
+  proposer    User?    @relation("ProposedDishes", fields: [proposerId], references: [id], onDelete: SetNull)
   order       Int      @default(0)
   authorsJson String   @default("[]")
   votes       Vote[]
   createdAt   DateTime @default(now())
+
+  @@unique([topic, name])
+  @@index([topic])
+  @@index([proposerId])
 }
 
 model Vote {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   dishId    String
   dish      Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
   rating    Int

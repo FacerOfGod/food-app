@@ -11,7 +11,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { key: "sessions", label: "Mes groupes" },
+  { key: "sessions", label: "Groupes" },
   { key: "mes-choix", label: "Mes choix" },
   { key: "proposer", label: "Proposer" },
   { key: "vote", label: "Voter", accent: true },
@@ -23,8 +23,14 @@ export function DashboardTabBar() {
   const activeView = TABS.some((t) => t.key === view) ? view : "sessions";
 
   function hrefFor(key: string) {
-    if (key === "sessions") return "/dashboard";
-    return `/dashboard?view=${key}`;
+    const params = new URLSearchParams(searchParams.toString());
+    if (key === "sessions") {
+      params.delete("view");
+    } else {
+      params.set("view", key);
+    }
+    const qs = params.toString();
+    return qs ? `/dashboard?${qs}` : "/dashboard";
   }
 
   const activeTab = TABS.find((t) => t.key === activeView);
@@ -45,7 +51,7 @@ export function DashboardTabBar() {
                     ? "text-white"
                     : "text-gray-900"
                   : tab.accent
-                    ? "text-orange-500 hover:text-orange-600"
+                    ? "text-emerald-500 hover:text-emerald-600"
                     : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -54,7 +60,7 @@ export function DashboardTabBar() {
                   layoutId="dashboard-tab-pill"
                   className={`absolute inset-0 rounded-md shadow-sm ${
                     activeTab?.accent
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-[0_1px_6px_rgba(232,93,4,0.4)]"
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-[0_1px_6px_rgba(16, 185, 129,0.4)]"
                       : "bg-white"
                   }`}
                   transition={{ type: "spring", stiffness: 500, damping: 38 }}

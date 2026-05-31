@@ -2,15 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { m, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-
-const RATINGS = [
-  { value: 1, label: "Éviter",     emoji: "🙅", color: "bg-red-100 text-red-800" },
-  { value: 2, label: "N'aime pas", emoji: "😕", color: "bg-orange-100 text-orange-800" },
-  { value: 3, label: "Neutre",     emoji: "😐", color: "bg-gray-100 text-gray-700" },
-  { value: 4, label: "J'aime",     emoji: "😋", color: "bg-green-100 text-green-800" },
-  { value: 5, label: "J'adore !",  emoji: "😍", color: "bg-green-200 text-green-900" },
-];
+import { ChevronDown, Users } from "lucide-react";
+import { RATINGS } from "@/lib/ratings";
 
 interface Vote {
   rating: number;
@@ -112,7 +105,7 @@ export function PeopleView({ members, dishes }: Props) {
           <h2 className="text-sm font-semibold text-gray-900">Qui participe ?</h2>
           <button
             onClick={toggleAll}
-            className="text-xs text-orange-500 font-medium hover:text-orange-700 transition-colors"
+            className="text-xs text-emerald-500 font-medium hover:text-emerald-700 transition-colors"
           >
             {selectedIds.size === members.length ? "Tout désélectionner" : "Tous sélectionner"}
           </button>
@@ -128,7 +121,7 @@ export function PeopleView({ members, dishes }: Props) {
                 whileHover={{ scale: 1.03 }}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                   isSelected
-                    ? "bg-orange-500 border-orange-500 text-white"
+                    ? "bg-emerald-500 border-emerald-500 text-white"
                     : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -152,7 +145,7 @@ export function PeopleView({ members, dishes }: Props) {
           transition={{ delay: 0.1 }}
           className="text-center py-10 opacity-60"
         >
-          <div className="text-4xl mb-3">👥</div>
+          <Users size={36} strokeWidth={1.5} className="mx-auto mb-3 text-gray-500" />
           <p className="text-sm font-medium text-gray-900">Sélectionnez au moins une personne</p>
           <p className="text-xs text-gray-500">Pour trouver les plats qui correspondent à tout le monde.</p>
         </m.div>
@@ -170,7 +163,7 @@ export function PeopleView({ members, dishes }: Props) {
               rankGradient = "from-red-400 to-red-500";
             } else if (dish.count > 0) {
               headerColor = "bg-white border-gray-100";
-              rankGradient = "from-orange-400 to-orange-500";
+              rankGradient = "from-emerald-400 to-emerald-500";
             }
 
             const isExpanded = expandedDishes.has(dish.id);
@@ -199,7 +192,7 @@ export function PeopleView({ members, dishes }: Props) {
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{dish.name}</p>
                       {dish.category && (
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">{dish.category}</p>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">{dish.category}</p>
                       )}
                     </div>
                   </div>
@@ -207,14 +200,14 @@ export function PeopleView({ members, dishes }: Props) {
                     <div className="text-right">
                       <p className="text-sm font-bold text-gray-900">
                         {dish.avgRating > 0 ? dish.avgRating.toFixed(1) : "—"}{" "}
-                        <span className="text-xs font-normal text-gray-400">/ 5</span>
+                        <span className="text-xs font-normal text-gray-500">/ 5</span>
                       </p>
-                      <p className="text-[10px] text-gray-400">{dish.count} vote{dish.count !== 1 ? "s" : ""}</p>
+                      <p className="text-[10px] text-gray-500">{dish.count} vote{dish.count !== 1 ? "s" : ""}</p>
                     </div>
                     <m.span
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-gray-400"
+                      className="text-gray-500"
                     >
                       <ChevronDown size={14} />
                     </m.span>
@@ -239,7 +232,7 @@ export function PeopleView({ members, dishes }: Props) {
                             <div key={iv.memberId} className="flex items-center justify-between text-xs">
                               <span className="text-gray-700 font-medium">{member.user.name ?? "Anonyme"}</span>
                               {ratingMeta ? (
-                                <span className={`px-2 py-0.5 rounded-full font-medium ${ratingMeta.color}`}>
+                                <span className={`px-2 py-0.5 rounded-full font-medium ${ratingMeta.badge}`}>
                                   {ratingMeta.emoji} {ratingMeta.label}
                                 </span>
                               ) : (

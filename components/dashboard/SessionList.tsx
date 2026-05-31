@@ -22,12 +22,12 @@ function SessionCard({ session, showDelete }: { session: Session; showDelete: bo
   return (
     <m.div
       variants={listItemVariants}
-      className="relative flex items-center justify-between bg-white rounded-2xl border border-gray-100 p-4 hover:border-orange-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)]"
+      className="relative flex items-center justify-between bg-white rounded-2xl border border-gray-100 p-4 hover:border-indigo-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)]"
     >
       <Link href={`/host/${session.id}`} className="absolute inset-0 rounded-2xl" />
       <div className="pointer-events-none">
         <p className="font-semibold text-gray-900">{session.name}</p>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-gray-500 mt-0.5">
           {session._count.members} membre{session._count.members > 1 ? "s" : ""}
         </p>
       </div>
@@ -67,7 +67,7 @@ export function SessionList({ sessions, joinedSessions }: Props) {
           ))}
         </m.div>
       ) : (
-        <p className="text-center text-sm text-gray-400 mb-8 py-8">
+        <p className="text-center text-sm text-gray-500 mb-8 py-8">
           Aucun groupe pour l&apos;instant.
         </p>
       )}
