@@ -257,7 +257,7 @@ export function VotingInterface({
           )}
         </div>
       ) : nextDish === null ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
           <m.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -269,10 +269,10 @@ export function VotingInterface({
           </m.div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-hidden">
           <div className="w-full max-w-sm">
             {/* Card — clips the horizontal slide animation */}
-            <div className="relative overflow-hidden rounded-3xl mb-5">
+            <div className="relative overflow-hidden rounded-3xl mb-3">
               <AnimatePresence mode="wait" initial={false}>
                 <m.div
                   key={nextDish.id}
@@ -368,7 +368,7 @@ export function VotingInterface({
             </div>
 
             {/* Progress — stays fixed outside AnimatePresence */}
-            <div className="text-center mt-6 space-y-2">
+            <div className="text-center mt-4 space-y-1.5">
               <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
                 <m.div
                   className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-indigo-500"
