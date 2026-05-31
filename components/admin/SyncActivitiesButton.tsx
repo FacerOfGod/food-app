@@ -30,7 +30,7 @@ export function SyncActivitiesButton() {
         </button>
       </form>
       {result !== null && !isPending && (
-        result.error ? (
+        "error" in result && result.error ? (
           <p className="text-xs font-medium text-red-600">{result.error}</p>
         ) : (
           <p className="text-xs font-medium text-green-600">
